@@ -126,6 +126,7 @@
         <div class="flex items-center gap-2">
           <div class="relative">
             <select id="sort" aria-label="Сортування" class="h-10 bg-soft rounded-full pl-4 pr-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ink">
+              <option value="rel">За релевантністю</option>
               <option value="name">Назва А → Я</option>
               <option value="name-desc">Назва Я → А</option>
               <option value="price-asc">Спочатку дешевші</option>
@@ -240,7 +241,7 @@
   //  status: 'stock' (в наявності) | 'transit' (в дорозі) | 'sold' (продано)
   //  photos: шляхи до фото. Якщо порожньо — показується заглушка з назвою.
   // УВАГА: окрім BMW, це приклади — замініть на свої авто та ціни.
-  const CARS = [
+  let CARS = [
     { id: 'bmw-530d',   brand: 'BMW',           model: '530d xDrive',        sub: '5 Series, G30',  year: 2019, km: 148000, engine: '3.0 л', fuel: 'Дизель', gearbox: 'Автомат',  awd: true,  price: 89900,  status: 'stock',
       photos: ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg'] },
     { id: 'passat-b8',  brand: 'Volkswagen',    model: 'Passat B8',          sub: '1.5 TSI',        year: 2020, km: 95000,  engine: '1.5 л', fuel: 'Бензин', gearbox: 'Автомат',  price: 69900,  status: 'transit', eta: '≈ 12 днів', progress: 66, photos: [] },
@@ -298,19 +299,53 @@
     }
     return prev[b.length];
   }
-  CARS.forEach(c => {
-    c._w = words([c.brand, c.model, c.sub, c.year, c.fuel, c.gearbox, c.engine, c.awd ? '4x4 повний привід' : '', ALIASES[c.brand] || ''].join(' '));
-    c._t = c._w.join(' ');
-  });
-  // токен знаходить авто: початок слова, фрагмент, або одна-дві помилки в написанні
+  // кирилиця → латиниця («пассат» → passat) і неправильна розкладка («фгвш» → audi)
+  const TR = { а:'a',б:'b',в:'v',г:'h',ґ:'g',д:'d',е:'e',є:'ye',ж:'zh',з:'z',и:'y',і:'i',ї:'yi',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ю:'yu',я:'ya',ь:'' };
+  const EN = "qwertyuiop[]asdfghjkl;'zxcvbnm,.", UK = 'йцукенгшщзхїфівапролджєячсмитьбю';
+  const translit = s => s.replace(/[а-яіїєґ]/g, ch => TR[ch]);
+  const relayout = s => [...s].map(ch => { const i = UK.indexOf(ch); return i < 0 ? ch : EN[i]; }).join('');
+  const skel = s => s.replace(/ph/g, 'f').replace(/[cq]/g, 'k').replace(/y/g, 'i').replace(/w/g, 'v').replace(/(.)\1+/g, '$1');
+  const variants = t => /[а-яіїєґ]/.test(t) ? [...new Set([t, translit(t), relayout(t)])] : [t];
+  const EXTRA = {
+    'Дизель': 'diesel tdi дт дизелі', 'Бензин': 'petrol gasoline tsi бензін', 'Гібрид': 'hybrid hev гибрид',
+    'Електро': 'electric ev електромобіль електричка', 'Автомат': 'automatic акпп автоматична', 'Механіка': 'manual мкпп механічна механика'
+  };
+
+  // збіг токена з авто: 4 — слово, 3 — початок слова, 2 — фрагмент, 1 — одна-дві помилки, 0 — немає
   function tokenMatch(t, c) {
-    if (c._w.some(w => w.startsWith(t))) return true;
-    if (t.length >= 3 && c._t.includes(t)) return true;
-    if (t.length >= 4 && !/^[\d.]+$/.test(t)) {
-      const d = t.length >= 7 ? 2 : 1;
-      return c._w.some(w => w.length >= 4 && Math.min(lev(t, w), lev(t, w.slice(0, t.length))) <= d);
+    let best = 0;
+    for (const v of variants(t)) {
+      if (c._w.includes(v)) best = Math.max(best, 4);
+      else if (c._w.some(w => w.startsWith(v))) best = Math.max(best, 3);
+      else if (v.length >= 3 && c._t.includes(v)) best = Math.max(best, 2);
+      else if (v.length >= 4 && !/^[\d.]+$/.test(v)) {
+        const sv = skel(v), d = sv.length >= 7 ? 2 : 1;
+        if (c._s.some(w => w.length >= 4 && Math.min(lev(sv, w), lev(sv, w.slice(0, sv.length))) <= d)) best = Math.max(best, 1);
+      }
+      if (best === 4) break;
     }
-    return false;
+    return best;
+  }
+
+  // індекс пошуку + списки фільтрів; викликається при кожному оновленні каталогу
+  function prepare() {
+    CARS.forEach(c => {
+      c.sub = c.sub || ''; c.photos = c.photos || [];
+      c._w = words([c.brand, c.model, c.sub, c.year, c.fuel, c.gearbox, c.engine, c.awd ? '4x4 awd повний привід' : '', ALIASES[c.brand] || '', EXTRA[c.fuel] || '', EXTRA[c.gearbox] || ''].join(' '));
+      c._t = c._w.join(' '); c._s = c._w.map(skel);
+    });
+    BRANDS = [...new Set(CARS.map(c => c.brand))].sort((a, b) => a.localeCompare(b, 'en'));
+    FUELS  = [...new Set(CARS.map(c => c.fuel))].sort((a, b) => a.localeCompare(b, 'uk'));
+    GEARS  = [...new Set(CARS.map(c => c.gearbox))].sort((a, b) => a.localeCompare(b, 'uk'));
+    PRICES = CARS.map(c => c.price);
+    const ys = CARS.map(c => c.year), now = new Date().getFullYear();
+    const yMin = ys.length ? Math.min(...ys) : now, yMax = ys.length ? Math.max(...ys) : now;
+    const keep = ['ymin', 'ymax', 'kmax'].map(id => $(id).value);
+    const yearOpts = label => `<option value="">${label}</option>` + Array.from({ length: yMax - yMin + 1 }, (_, i) => yMax - i).map(y => `<option value="${y}">${y}</option>`).join('');
+    $('ymin').innerHTML = yearOpts('Рік від'); $('ymax').innerHTML = yearOpts('Рік до');
+    $('kmax').innerHTML = '<option value="">Будь-який</option>' + KM_STEPS.map(k => `<option value="${k}">до ${fmt(k)} км</option>`).join('');
+    ['ymin', 'ymax', 'kmax'].forEach((id, i) => { $(id).value = keep[i]; });
+    if (PRICES.length) { $('pmin').placeholder = 'від ' + fmt(Math.min(...PRICES)); $('pmax').placeholder = 'до ' + fmt(Math.max(...PRICES)); }
   }
 
   // ===== Стан фільтрів =====
@@ -319,11 +354,8 @@
   let curCar = null;   // відкрита картка
   let leadCtx = '';    // авто/запит для заявки
 
-  const BRANDS = [...new Set(CARS.map(c => c.brand))].sort((a, b) => a.localeCompare(b, 'en'));
-  const FUELS  = [...new Set(CARS.map(c => c.fuel))].sort((a, b) => a.localeCompare(b, 'uk'));
-  const GEARS  = [...new Set(CARS.map(c => c.gearbox))].sort((a, b) => a.localeCompare(b, 'uk'));
-  const YEARS  = CARS.map(c => c.year);
-  const PRICES = CARS.map(c => c.price);
+  let BRANDS, FUELS, GEARS, PRICES;
+  let started = false, lastRaw = '';
 
   // skip — яка група фільтрів ігнорується (для лічильників на чіпах і підказок)
   function match(c, skip) {
@@ -346,10 +378,17 @@
     'price-desc': (a, b) => b.price - a.price,
     'year-desc': (a, b) => b.year - a.year || a.price - b.price,
     'year-asc': (a, b) => a.year - b.year || a.price - b.price,
-    'km-asc': (a, b) => a.km - b.km
+    'km-asc': (a, b) => a.km - b.km,
+    'rel': cmpName
   };
   // продані завжди внизу, незалежно від сортування
-  const sortList = list => list.slice().sort((a, b) => ((a.status === 'sold') - (b.status === 'sold')) || SORTS[S.sort](a, b));
+  // з пошуковим запитом за замовчуванням — за релевантністю, поки людина сама не вибрала сортування
+  const relMode = () => S.sort === 'rel' || (S.sort === 'name' && !S.sortSet && qTok.length > 0);
+  const score = c => qTok.reduce((n, t) => n + tokenMatch(t, c), 0);
+  const sortList = list => {
+    const rel = relMode(), sc = rel ? new Map(list.map(c => [c, score(c)])) : null;
+    return list.slice().sort((a, b) => ((a.status === 'sold') - (b.status === 'sold')) || (rel ? sc.get(b) - sc.get(a) || cmpName(a, b) : SORTS[S.sort](a, b)));
+  };
 
   // «100к», «100 000», «1,5 тис» → число
   function parseNum(v) {
@@ -469,6 +508,7 @@
     $('priceQuick').innerHTML = PRICE_QUICK.map((p, i) => chip('qp', i, p.l, null, S.pmin === p.min && S.pmax === p.max)).join('');
 
     const list = sortList(CARS.filter(c => match(c)));
+    $('sort').value = relMode() ? 'rel' : S.sort;
     const act = actives();
     $('count').textContent = list.length ? `Знайдено ${list.length} авто` : 'Нічого не знайдено';
     $('active').innerHTML = act.length
@@ -517,13 +557,6 @@
   }
   const toggle = (set, v) => { set.has(v) ? set.delete(v) : set.add(v); render(); };
 
-  // ===== Ініціалізація полів =====
-  const yMin = Math.min(...YEARS), yMax = Math.max(...YEARS);
-  const yearOpts = label => `<option value="">${label}</option>` + Array.from({ length: yMax - yMin + 1 }, (_, i) => yMax - i).map(y => `<option value="${y}">${y}</option>`).join('');
-  $('ymin').innerHTML = yearOpts('Рік від'); $('ymax').innerHTML = yearOpts('Рік до');
-  $('kmax').innerHTML = '<option value="">Будь-який</option>' + KM_STEPS.map(k => `<option value="${k}">до ${fmt(k)} км</option>`).join('');
-  $('pmin').placeholder = 'від ' + fmt(Math.min(...PRICES));
-  $('pmax').placeholder = 'до ' + fmt(Math.max(...PRICES));
 
   // ===== Події фільтрів =====
   $('q').addEventListener('input', e => { S.q = e.target.value; qTok = words(S.q); render(); });
@@ -540,7 +573,7 @@
   });
   ['ymin', 'ymax'].forEach(id => $(id).addEventListener('change', e => { S[id] = parseInt(e.target.value, 10) || null; swapIfReversed('ymin', 'ymax'); syncInputs(); render(); }));
   $('kmax').addEventListener('change', e => { S.kmax = parseInt(e.target.value, 10) || null; render(); });
-  $('sort').addEventListener('change', e => { S.sort = e.target.value; render(); });
+  $('sort').addEventListener('change', e => { S.sort = e.target.value; S.sortSet = true; render(); });
   $('viewGrid').onclick = () => { S.view = 'grid'; render(); };
   $('viewList').onclick = () => { S.view = 'list'; render(); };
   $('filterBtn').onclick = () => { const o = $('panel').classList.toggle('open'); $('filterBtn').setAttribute('aria-expanded', o); };
@@ -666,12 +699,32 @@
   });
 
   // ===== Старт =====
-  $('total').textContent = CARS.length + ' авто в каталозі';
-  const fromURL = readURL();
-  syncInputs();
-  if (actives().some(a => a.k !== 'q')) { $('panel').classList.add('open'); $('filterBtn').setAttribute('aria-expanded', 'true'); }
-  render();
-  if (fromURL) openCar(fromURL);
+  // каталог тягнемо з сервера (туди його додає Telegram-бот); якщо API недоступне — лишається список зі сторінки
+  async function loadCars() {
+    try {
+      const r = await fetch('/api/cars', { cache: 'no-store', signal: AbortSignal.timeout(4000) });
+      if (!r.ok) return;
+      const raw = await r.text();
+      if (raw === lastRaw) return;
+      CARS = JSON.parse(raw); lastRaw = raw; prepare();
+      if (!started) return;
+      $('total').textContent = CARS.length + ' авто в каталозі';
+      if (curCar) { const n = CARS.find(c => c.id === curCar.id); n ? curCar = n : closeDetail(); }
+      render();
+    } catch (_) {}
+  }
+  (async () => {
+    await loadCars();
+    prepare();
+    $('total').textContent = CARS.length + ' авто в каталозі';
+    const fromURL = readURL();
+    syncInputs();
+    if (actives().some(a => a.k !== 'q')) { $('panel').classList.add('open'); $('filterBtn').setAttribute('aria-expanded', 'true'); }
+    started = true; render();
+    if (fromURL) openCar(fromURL);
+    setInterval(loadCars, 15000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) loadCars(); });
+  })();
 </script>
 </body>
 </html>
