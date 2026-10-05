@@ -3,164 +3,188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0a0a0b">
-<title>Auto Komis Dobryak — авто в наявності та під замовлення</title>
+<meta name="theme-color" content="#ffffff">
+<title>Auto Komis — авто в наявності та під замовлення</title>
 <link rel="icon" href="img/logo.png">
 <meta property="og:image" content="img/logo.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
 <script>
   tailwind.config = { theme: { extend: {
-    colors: { ink: '#0a0a0b', coal: '#141416', steel: '#1d1e21', gold: '#f5a800', silver: '#d9dce0' },
+    colors: { ink: '#0e0e10', soft: '#f4f4f5', gold: '#f5a800' },
     fontFamily: { sans: ['"Golos Text"', 'system-ui', 'sans-serif'], display: ['Unbounded', '"Golos Text"', 'sans-serif'] }
   } } };
 </script>
 <style>
   html { scroll-behavior: smooth; }
-  body { -webkit-tap-highlight-color: transparent; background: #0a0a0b; }
-  :focus-visible { outline: 2px solid #f5a800; outline-offset: 2px; }
-  .gold-text { background: linear-gradient(180deg, #ffd75e, #f5a800 55%, #b87400); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .btn-gold { background: linear-gradient(180deg, #ffd75e, #f5a800 60%, #d98e00); box-shadow: 0 6px 24px -8px rgba(245,168,0,.6); }
-  .ring-gold { background: conic-gradient(from 200deg, #ffd75e, #b87400, #f5a800, #ffd75e); }
-  .hero-glow { background: radial-gradient(60% 50% at 50% 0%, rgba(245,168,0,.22), transparent 70%); }
+  body { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid #0e0e10; outline-offset: 3px; }
+  .arc { border-radius: 9999px; border: 1px solid rgba(14,14,16,.09); }
+  .arc-gold { border-color: transparent; border-top-color: #f5a800; border-right-color: rgba(245,168,0,.35); }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
-  @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-  .rise { animation: rise .7s cubic-bezier(.2,.7,.2,1) both; }
-  .rise-2 { animation-delay: .12s; } .rise-3 { animation-delay: .24s; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { animation: none; } }
+
+  /* Картка, що перевертається */
+  .flip { perspective: 1500px; }
+  .flip-in { position: relative; transform-style: preserve-3d; transition: transform .85s cubic-bezier(.2,.75,.2,1); }
+  .face { box-shadow: 0 40px 70px -40px rgba(14,14,16,.45), 0 0 0 1px rgba(14,14,16,.06); position: absolute; inset: 0; border-radius: 28px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .back { transform: rotateY(180deg); }
+  .flip.on .flip-in { transform: rotateY(180deg); }
+  @media (hover: hover) { .flip:hover .flip-in { transform: rotateY(180deg); } }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
+  .rise-2 { animation-delay: .1s; } .rise-3 { animation-delay: .2s; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { animation: none; } .flip-in { transition: none; } }
 </style>
 </head>
-<body class="text-white font-sans antialiased pb-28 md:pb-0">
+<body class="overflow-x-clip bg-white text-ink font-sans antialiased pb-28 md:pb-0">
 
-<header class="sticky top-0 z-30 bg-ink/90 backdrop-blur border-b border-white/10">
-  <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-2.5">
-    <a href="#" class="flex items-center gap-3" aria-label="Auto Komis Dobryak">
-      <span class="ring-gold p-[2px] rounded-full"><img src="img/logo.png" alt="" class="w-10 h-10 rounded-full block"></span>
-      <span class="font-display font-semibold text-[15px] leading-tight">Auto Komis<span class="block text-xs font-medium text-silver/60">Dobryak</span></span>
+<header class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-ink/10">
+  <div class="max-w-5xl mx-auto flex items-center justify-between px-5 h-16">
+    <a href="#" class="flex items-center gap-3" aria-label="Auto Komis">
+      <img src="img/logo.png" alt="" class="w-10 h-10 rounded-full ring-1 ring-ink/15" width="40" height="40">
+      <span class="font-display font-medium text-[15px]">Auto Komis</span>
     </a>
-    <a href="tel:+380992747250" class="btn-gold flex items-center gap-2 text-ink text-sm font-semibold pl-3 pr-4 py-2 rounded-full">
-      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011-.25c1.1.37 2.3.57 3.6.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1z"/></svg>
-      Подзвонити
-    </a>
+    <a href="tel:+380000000000" class="text-sm font-semibold border border-ink/15 hover:border-ink rounded-full px-4 py-2 transition">Подзвонити</a>
   </div>
 </header>
 
-<main>
-  <section class="hero-glow">
-    <div class="max-w-5xl mx-auto px-4 pt-8 pb-10 md:pt-14 md:pb-16 flex flex-col md:flex-row items-center gap-8 md:gap-14">
-      <div class="rise ring-gold p-[3px] rounded-full shrink-0 shadow-[0_0_80px_-10px_rgba(245,168,0,.45)]">
-        <img src="img/logo.png" alt="Auto Komis Dobryak" class="w-56 h-56 md:w-80 md:h-80 rounded-full block" width="320" height="320">
-      </div>
-      <div class="text-center md:text-left">
-        <h1 class="rise rise-2 font-display font-semibold text-[27px] md:text-5xl leading-[1.15] tracking-tight">Авто в наявності<br>та під замовлення</h1>
-        <p class="rise rise-3 mt-4 text-[17px] leading-snug text-silver/70 max-w-[34ch] mx-auto md:mx-0">Привозимо з Європи та США. Перевіряємо історію і рахуємо ціну до гривні.</p>
-        <a href="#catalog" class="rise rise-3 hidden md:inline-block mt-7 border border-gold/60 text-gold font-semibold rounded-full px-6 py-3 hover:bg-gold hover:text-ink transition">Дивитись каталог</a>
-      </div>
+<main class="max-w-5xl mx-auto px-5">
+
+  <section class="relative pt-16 pb-16 md:pt-28 md:pb-28">
+    <div class="hidden md:block absolute right-[-120px] top-10 w-[520px] h-[520px] pointer-events-none" aria-hidden="true">
+      <div class="arc absolute inset-0"></div>
+      <div class="arc absolute inset-[70px]"></div>
+      <div class="arc arc-gold absolute inset-[70px] -rotate-45"></div>
+    </div>
+    <h1 class="rise relative font-display font-medium text-[34px] md:text-[64px] leading-[1.05] tracking-[-0.03em] max-w-[14ch]">Авто в наявності та під замовлення</h1>
+    <p class="rise rise-2 relative mt-6 md:mt-8 text-[17px] md:text-xl leading-snug text-ink/60 max-w-[32ch]">Привозимо з Європи та США. Перевіряємо історію і рахуємо ціну до гривні.</p>
+    <div class="rise rise-3 relative mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+      <button id="openModal3" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити підбір</button>
+      <a href="#catalog" class="font-semibold border-b-2 border-gold pb-0.5">Дивитись каталог</a>
     </div>
   </section>
 
-  <section id="catalog" class="max-w-5xl mx-auto scroll-mt-16">
-    <div class="flex items-baseline justify-between px-4 mb-5">
-      <h2 class="font-display font-semibold text-xl">Каталог авто</h2>
-      <span class="text-sm text-silver/50">3 авто</span>
+  <section id="catalog" class="scroll-mt-20">
+    <div class="flex items-baseline justify-between border-t border-ink/10 pt-5 mb-8">
+      <h2 class="font-display font-medium text-lg">Каталог</h2>
+      <span class="text-sm text-ink/45">3 авто</span>
     </div>
 
-    <article class="md:grid md:grid-cols-2 md:gap-8 md:px-4">
-      <div class="relative mx-3 md:mx-0 rounded-[28px] overflow-hidden bg-steel ring-1 ring-white/10" id="gallery">
-        <div id="slides" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar"></div>
-        <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
-        <div id="bars" class="absolute top-3 inset-x-3 flex gap-1.5 pointer-events-none"></div>
-        <span class="absolute bottom-3 left-3 bg-gold text-ink text-xs font-bold px-3 py-1.5 rounded-full">В наявності</span>
-        <div class="absolute bottom-3 right-3 flex gap-2">
-          <button id="prev" aria-label="Попереднє фото" class="w-9 h-9 grid place-items-center rounded-full bg-white/90 text-ink hover:bg-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
-          <button id="next" aria-label="Наступне фото" class="w-9 h-9 grid place-items-center rounded-full bg-white/90 text-ink hover:bg-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <article class="md:grid md:grid-cols-2 md:gap-16 md:items-center">
+      <div class="max-w-[480px] w-full">
+        <div id="flip" class="flip">
+          <div class="flip-in aspect-[4/5]">
+            <!-- Лицьова сторона: фото -->
+            <div class="face bg-soft">
+              <div id="slides" class="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar"></div>
+              <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/45 to-transparent pointer-events-none"></div>
+              <div id="bars" class="absolute top-3 inset-x-4 flex gap-1.5 pointer-events-none"></div>
+              <span class="absolute bottom-4 left-4 inline-flex items-center gap-2 bg-white text-ink text-xs font-semibold px-3 py-1.5 rounded-full"><i class="w-1.5 h-1.5 rounded-full bg-gold"></i>В наявності</span>
+            </div>
+            <!-- Зворотна сторона: характеристики -->
+            <div class="face back bg-ink text-white p-8 flex flex-col justify-center">
+              <img src="img/logo.png" alt="" class="absolute -right-20 -bottom-20 w-64 h-64 rounded-full opacity-[.09] grayscale pointer-events-none">
+              <p class="relative font-display text-xl tracking-tight">BMW 530d xDrive</p>
+              <p class="relative mt-1 text-white/45 text-sm">Характеристики</p>
+              <dl class="relative mt-4">
+                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Рік</dt><dd class="font-semibold">2019</dd></div>
+                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Пробіг</dt><dd class="font-semibold">148 000 км</dd></div>
+                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Двигун</dt><dd class="font-semibold">3.0 л</dd></div>
+                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Паливо</dt><dd class="font-semibold">Дизель</dd></div>
+                <div class="flex justify-between items-baseline py-4"><dt class="text-white/55">Коробка</dt><dd class="font-semibold">Автомат, 4x4</dd></div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between">
+          <div class="flex items-center gap-1">
+            <button id="prev" aria-label="Попереднє фото" class="w-10 h-10 grid place-items-center rounded-full border border-ink/15 hover:border-ink transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
+            <span id="count" class="w-14 text-center text-sm tabular-nums text-ink/55"></span>
+            <button id="next" aria-label="Наступне фото" class="w-10 h-10 grid place-items-center rounded-full border border-ink/15 hover:border-ink transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+          <button id="flipBtn" class="flex items-center gap-2 text-sm font-semibold border border-ink/15 hover:border-ink rounded-full pl-4 pr-3 h-10 transition"><span>Характеристики</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0115-6.7L21 8M21 3v5h-5M21 12a9 9 0 01-15 6.7L3 16M3 21v-5h5"/></svg></button>
         </div>
       </div>
 
-      <div>
-        <div class="px-4 pt-5 md:pt-0">
-          <h3 id="carName" class="font-display font-semibold text-2xl leading-tight">BMW 530d xDrive</h3>
-          <p class="mt-1 text-silver/55">5 Series, G30</p>
-          <p class="mt-3 font-display font-bold text-[36px] leading-none tracking-tight gold-text">$24 900</p>
+      <div class="mt-8 md:mt-0">
+        <h3 id="carName" class="font-display font-medium text-[26px] md:text-4xl leading-tight tracking-tight">BMW 530d xDrive</h3>
+        <p class="mt-1.5 text-ink/55">5 Series, G30 · 2019 · Дизель</p>
+        <p class="mt-6 font-display font-medium text-[38px] md:text-5xl leading-none tracking-tight">$24 900</p>
+        <div class="hidden md:flex gap-3 mt-9">
+          <button id="openModal2" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити огляд / Дзвінок</button>
+          <a id="tgBtn2" href="#" target="_blank" rel="noopener" class="border border-ink/15 hover:border-ink font-semibold rounded-full px-7 py-4 transition">Telegram</a>
         </div>
-        <dl class="mx-3 md:mx-0 mt-5 rounded-[28px] bg-coal ring-1 ring-white/10 px-5 py-2">
-          <div class="flex justify-between items-baseline py-3.5 border-b border-white/10"><dt class="text-silver/55">Рік</dt><dd class="font-semibold">2019</dd></div>
-          <div class="flex justify-between items-baseline py-3.5 border-b border-white/10"><dt class="text-silver/55">Пробіг</dt><dd class="font-semibold">148 000 км</dd></div>
-          <div class="flex justify-between items-baseline py-3.5 border-b border-white/10"><dt class="text-silver/55">Двигун</dt><dd class="font-semibold">3.0 л</dd></div>
-          <div class="flex justify-between items-baseline py-3.5 border-b border-white/10"><dt class="text-silver/55">Паливо</dt><dd class="font-semibold">Дизель</dd></div>
-          <div class="flex justify-between items-baseline py-3.5"><dt class="text-silver/55">Коробка</dt><dd class="font-semibold">Автомат, 4x4</dd></div>
-        </dl>
-        <button id="openModal2" class="hidden md:block mt-5 w-full btn-gold text-ink font-semibold rounded-full py-4">Замовити огляд / Дзвінок</button>
       </div>
     </article>
 
-    <div class="px-4 mt-10 space-y-3">
-      <article class="flex gap-4 items-center opacity-50 rounded-2xl bg-coal ring-1 ring-white/5 p-3">
-        <div class="w-[72px] h-[72px] shrink-0 rounded-xl bg-steel grid place-items-center font-display font-semibold text-silver/40">A6</div>
-        <div class="min-w-0">
-          <h3 class="font-semibold line-through decoration-white/40">Audi A6 Avant 2.0 TDI</h3>
-          <p class="text-sm text-silver/60">2018 · 162 000 км · Дизель</p>
-          <p class="text-sm font-semibold mt-0.5">Продано</p>
+    <div class="mt-16 border-t border-ink/10">
+      <article class="flex gap-4 items-center py-5 border-b border-ink/10 opacity-45">
+        <div class="w-16 h-16 shrink-0 rounded-2xl bg-soft grid place-items-center font-display text-sm text-ink/40">A6</div>
+        <div class="min-w-0 flex-1">
+          <h3 class="font-semibold line-through decoration-ink/40">Audi A6 Avant 2.0 TDI</h3>
+          <p class="text-sm text-ink/60">2018 · 162 000 км · Дизель</p>
         </div>
+        <span class="text-sm font-semibold">Продано</span>
       </article>
-      <article class="flex gap-4 items-center rounded-2xl bg-coal ring-1 ring-gold/25 p-3">
-        <div class="w-[72px] h-[72px] shrink-0 rounded-xl bg-steel grid place-items-center font-display font-semibold gold-text">B8</div>
+      <article class="flex gap-4 items-center py-5 border-b border-ink/10">
+        <div class="w-16 h-16 shrink-0 rounded-2xl bg-soft grid place-items-center font-display text-sm text-ink/40">B8</div>
         <div class="min-w-0 flex-1">
           <h3 class="font-semibold">Volkswagen Passat B8</h3>
-          <p class="text-sm text-silver/60">2020 · 95 000 км · Бензин</p>
-          <div class="mt-2 h-1 rounded-full bg-white/10"><div class="h-1 w-2/3 rounded-full btn-gold"></div></div>
-          <p class="text-sm mt-1.5"><span class="font-semibold text-gold">В дорозі</span> <span class="text-silver/60">— прибуде орієнтовно за 12 днів</span></p>
+          <p class="text-sm text-ink/60">2020 · 95 000 км · Бензин</p>
+          <div class="mt-2.5 h-[3px] rounded-full bg-ink/10 max-w-[220px]"><div class="h-full w-2/3 rounded-full bg-gold"></div></div>
         </div>
+        <span class="text-sm text-right"><b class="font-semibold">В дорозі</b><span class="block text-ink/55">≈ 12 днів</span></span>
       </article>
     </div>
   </section>
 
-  <section class="max-w-5xl mx-auto px-4 mt-16">
-    <h2 class="font-display font-semibold text-xl leading-tight">Як ми привозимо авто</h2>
-    <ol class="mt-6 ml-2 border-l-2 border-white/10 space-y-7 md:max-w-xl">
-      <li class="relative pl-7"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-silver ring-4 ring-ink"></span>
-        <h3 class="font-semibold">Підбираємо</h3><p class="mt-1 text-silver/60">Ви кажете бюджет і що важливо, ми шукаємо варіанти в Європі та США.</p></li>
-      <li class="relative pl-7"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-silver ring-4 ring-ink"></span>
-        <h3 class="font-semibold">Перевіряємо до оплати</h3><p class="mt-1 text-silver/60">Історія, реальний пробіг і стан кузова. Показуємо фото й відео.</p></li>
-      <li class="relative pl-7"><span class="absolute -left-[9px] top-1 w-4 h-4 rounded-full btn-gold ring-4 ring-ink"></span>
-        <h3 class="font-semibold">Привозимо й оформлюємо</h3><p class="mt-1 text-silver/60">Доставка, розмитнення, реєстрація. Ви забираєте авто з документами.</p></li>
+  <section class="mt-28 md:mt-40">
+    <h2 class="font-display font-medium text-2xl md:text-3xl tracking-tight">Як ми привозимо авто</h2>
+    <ol class="mt-12 grid md:grid-cols-3 gap-12 md:gap-10">
+      <li class="border-t-2 border-ink pt-5"><span class="text-sm text-ink/45 tabular-nums">1</span>
+        <h3 class="mt-3 font-semibold text-lg">Підбираємо</h3><p class="mt-2 text-ink/60 leading-relaxed">Ви кажете бюджет і що важливо, ми шукаємо варіанти в Європі та США.</p></li>
+      <li class="border-t-2 border-ink pt-5"><span class="text-sm text-ink/45 tabular-nums">2</span>
+        <h3 class="mt-3 font-semibold text-lg">Перевіряємо до оплати</h3><p class="mt-2 text-ink/60 leading-relaxed">Історія, реальний пробіг і стан кузова. Показуємо фото й відео.</p></li>
+      <li class="border-t-2 border-gold pt-5"><span class="text-sm text-ink/45 tabular-nums">3</span>
+        <h3 class="mt-3 font-semibold text-lg">Привозимо й оформлюємо</h3><p class="mt-2 text-ink/60 leading-relaxed">Доставка, розмитнення, реєстрація. Ви забираєте авто з документами.</p></li>
     </ol>
   </section>
 
-  <footer class="max-w-5xl mx-auto px-4 py-12 mt-6 flex items-center gap-3 text-sm text-silver/45">
-    <img src="img/logo.png" alt="" class="w-9 h-9 rounded-full opacity-80"> © Auto Komis Dobryak
-  </footer>
+  <footer class="mt-24 py-8 border-t border-ink/10 text-sm text-ink/45">© Auto Komis</footer>
 </main>
 
-<div class="fixed bottom-0 inset-x-0 z-30 bg-ink/95 backdrop-blur border-t border-white/10 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
-  <div class="max-w-md mx-auto grid grid-cols-5 gap-2 p-3">
-    <button id="openModal" class="col-span-3 btn-gold active:scale-[.98] text-ink font-semibold rounded-full py-3.5 text-[15px] transition">Замовити огляд / Дзвінок</button>
-    <a id="tgBtn" href="#" target="_blank" rel="noopener" class="col-span-2 border border-white/25 active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] text-center transition">Написати в Telegram</a>
+<div class="fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur border-t border-ink/10 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+  <div class="grid grid-cols-5 gap-2 p-3">
+    <button id="openModal" class="col-span-3 bg-ink active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] transition">Замовити огляд / Дзвінок</button>
+    <a id="tgBtn" href="#" target="_blank" rel="noopener" class="col-span-2 border border-ink/20 active:scale-[.98] font-semibold rounded-full py-3.5 text-[15px] text-center transition">Telegram</a>
   </div>
 </div>
 
 <div id="modal" class="hidden fixed inset-0 z-50 items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-  <div id="overlay" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
-  <div class="relative w-full max-w-md bg-coal ring-1 ring-white/10 rounded-t-[28px] sm:rounded-[28px] p-5 shadow-2xl" style="padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));">
-    <button id="closeModal" aria-label="Закрити" class="absolute top-4 right-4 w-9 h-9 grid place-items-center rounded-full bg-steel hover:bg-white/15">
+  <div id="overlay" class="absolute inset-0 bg-ink/50 backdrop-blur-sm"></div>
+  <div class="relative w-full max-w-md bg-white rounded-t-[28px] sm:rounded-[28px] p-6 shadow-2xl" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
+    <button id="closeModal" aria-label="Закрити" class="absolute top-5 right-5 w-9 h-9 grid place-items-center rounded-full bg-soft hover:bg-ink/10">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
     <div id="formView">
-      <h3 id="modalTitle" class="font-display font-semibold text-xl pr-12">Замовити огляд</h3>
-      <p class="text-silver/60 mt-2">Залиште номер — передзвонимо протягом 15 хвилин.</p>
-      <form id="leadForm" class="mt-5 space-y-3" novalidate>
-        <input id="name" name="name" type="text" placeholder="Твоє ім'я" autocomplete="name" required class="w-full bg-steel rounded-2xl px-4 py-4 text-base text-white placeholder-white/35 focus:outline-none focus:ring-2 focus:ring-gold">
-        <input id="phone" name="phone" type="tel" placeholder="Номер телефону" autocomplete="tel" inputmode="tel" required class="w-full bg-steel rounded-2xl px-4 py-4 text-base text-white placeholder-white/35 focus:outline-none focus:ring-2 focus:ring-gold">
-        <p id="formError" class="hidden text-sm text-red-400"></p>
-        <button id="submitBtn" type="submit" class="w-full btn-gold text-ink font-semibold rounded-full py-4 disabled:opacity-60 transition">Надіслати заявку</button>
+      <h3 id="modalTitle" class="font-display font-medium text-xl pr-12">Замовити огляд</h3>
+      <p class="text-ink/60 mt-2">Залиште номер — передзвонимо протягом 15 хвилин.</p>
+      <form id="leadForm" class="mt-6 space-y-3" novalidate>
+        <input id="name" name="name" type="text" placeholder="Твоє ім'я" autocomplete="name" required class="w-full bg-soft rounded-2xl px-4 py-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+        <input id="phone" name="phone" type="tel" placeholder="Номер телефону" autocomplete="tel" inputmode="tel" required class="w-full bg-soft rounded-2xl px-4 py-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+        <p id="formError" class="hidden text-sm text-red-600"></p>
+        <button id="submitBtn" type="submit" class="w-full bg-ink text-white font-semibold rounded-full py-4 disabled:opacity-60 transition">Надіслати заявку</button>
       </form>
     </div>
     <div id="doneView" class="hidden py-8">
-      <h3 class="font-display font-semibold text-xl gold-text">Заявку надіслано</h3>
-      <p class="text-silver/60 mt-2">Менеджер скоро зателефонує.</p>
+      <h3 class="font-display font-medium text-xl">Заявку надіслано</h3>
+      <p class="text-ink/60 mt-2">Менеджер скоро зателефонує.</p>
     </div>
   </div>
 </div>
@@ -168,7 +192,7 @@
 <script>
   // ===== Налаштування =====
   const CAR_NAME    = 'BMW 530d xDrive';
-  const TG_USERNAME = 'GalaxGGVP';   // без @
+  const TG_USERNAME = 'your_telegram_username';   // без @
   const API_URL     = '/api/lead';                // бекенд (server.js)
   const PHOTOS      = ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg']; // свої фото
 
@@ -188,7 +212,7 @@
     b.className = 'block h-[3px] flex-1 rounded-full bg-white/45 transition-colors';
     bars.appendChild(b);
   });
-  function mark() { [...bars.children].forEach((b, i) => { b.className = b.className.replace(/bg-white(\/45)?/, i <= idx ? 'bg-white' : 'bg-white/45'); }); }
+  function mark() { $('count').textContent = (idx + 1) + ' / ' + PHOTOS.length; [...bars.children].forEach((b, i) => { b.className = b.className.replace(/bg-white(\/45)?/, i <= idx ? 'bg-white' : 'bg-white/45'); }); }
   function go(n) { slides.scrollTo({ left: ((n + PHOTOS.length) % PHOTOS.length) * slides.clientWidth, behavior: 'smooth' }); }
   slides.addEventListener('scroll', () => {
     const i = Math.round(slides.scrollLeft / slides.clientWidth);
@@ -199,7 +223,11 @@
   mark();
 
   // ===== Telegram =====
-  $('tgBtn').href = `https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Привіт! Цікавить авто ' + CAR_NAME)}`;
+  const tgUrl = `https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Привіт! Цікавить авто ' + CAR_NAME)}`;
+  $('tgBtn').href = tgUrl; $('tgBtn2').href = tgUrl;
+
+  // ===== Переворот картки (на телефоні — по кнопці) =====
+  $('flipBtn').onclick = () => { const on = $('flip').classList.toggle('on'); $('flipBtn').firstElementChild.textContent = on ? 'Фото' : 'Характеристики'; };
 
   // ===== Модальне вікно =====
   const modal = $('modal'), form = $('leadForm'), errBox = $('formError'), submitBtn = $('submitBtn');
@@ -209,7 +237,7 @@
     setTimeout(() => $('name').focus(), 50);
   }
   function closeModal() { modal.classList.replace('flex', 'hidden'); document.body.style.overflow = ''; }
-  $('openModal').onclick = openModal; $('openModal2').onclick = openModal;
+  $('openModal').onclick = openModal; $('openModal2').onclick = openModal; $('openModal3').onclick = openModal;
   $('closeModal').onclick = closeModal;
   $('overlay').onclick = closeModal;
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
