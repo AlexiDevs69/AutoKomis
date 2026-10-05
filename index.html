@@ -25,26 +25,21 @@
   .arc-gold { border-color: transparent; border-top-color: #f5a800; border-right-color: rgba(245,168,0,.35); }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
-
-  /* Картка, що перевертається */
-  .flip { perspective: 1500px; }
-  .flip-in { position: relative; transform-style: preserve-3d; transition: transform .85s cubic-bezier(.2,.75,.2,1); }
-  .face { box-shadow: 0 40px 70px -40px rgba(14,14,16,.45), 0 0 0 1px rgba(14,14,16,.06); position: absolute; inset: 0; border-radius: 28px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-  .back { transform: rotateY(180deg); }
-  .flip.on .flip-in { transform: rotateY(180deg); }
-  @media (hover: hover) { .flip:hover .flip-in { transform: rotateY(180deg); } }
+  input[type=search]::-webkit-search-cancel-button { display: none; }
+  select { -webkit-appearance: none; appearance: none; }
+  #panel.open { display: grid; }
 
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
   .rise-2 { animation-delay: .1s; } .rise-3 { animation-delay: .2s; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { animation: none; } .flip-in { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { animation: none; } }
 </style>
 </head>
 <body class="overflow-x-clip bg-white text-ink font-sans antialiased pb-28 md:pb-0">
 
 <header class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-ink/10">
-  <div class="max-w-5xl mx-auto flex items-center justify-between px-5 h-16">
-    <a href="#" class="flex items-center gap-3" aria-label="Auto Komis">
+  <div class="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
+    <a href="./" class="flex items-center gap-3" aria-label="Auto Komis">
       <img src="img/logo.png" alt="" class="w-10 h-10 rounded-full ring-1 ring-ink/15" width="40" height="40">
       <span class="font-display font-medium text-[15px]">Auto Komis</span>
     </a>
@@ -52,9 +47,9 @@
   </div>
 </header>
 
-<main class="max-w-5xl mx-auto px-5">
+<main class="max-w-6xl mx-auto px-5">
 
-  <section class="relative pt-16 pb-16 md:pt-28 md:pb-28">
+  <section class="relative pt-16 pb-14 md:pt-24 md:pb-20">
     <div class="hidden md:block absolute right-[-120px] top-10 w-[520px] h-[520px] pointer-events-none" aria-hidden="true">
       <div class="arc absolute inset-0"></div>
       <div class="arc absolute inset-[70px]"></div>
@@ -63,85 +58,94 @@
     <h1 class="rise relative font-display font-medium text-[34px] md:text-[64px] leading-[1.05] tracking-[-0.03em] max-w-[14ch]">Авто в наявності та під замовлення</h1>
     <p class="rise rise-2 relative mt-6 md:mt-8 text-[17px] md:text-xl leading-snug text-ink/60 max-w-[32ch]">Привозимо з Європи та США. Перевіряємо історію і рахуємо ціну до гривні.</p>
     <div class="rise rise-3 relative mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-      <button id="openModal3" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити підбір</button>
+      <button id="openHero" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити підбір</button>
       <a href="#catalog" class="font-semibold border-b-2 border-gold pb-0.5">Дивитись каталог</a>
     </div>
   </section>
 
+  <!-- ===== КАТАЛОГ ===== -->
   <section id="catalog" class="scroll-mt-20">
-    <div class="flex items-baseline justify-between border-t border-ink/10 pt-5 mb-8">
+    <div class="flex items-baseline justify-between border-t border-ink/10 pt-5 mb-5">
       <h2 class="font-display font-medium text-lg">Каталог</h2>
-      <span class="text-sm text-ink/45">3 авто</span>
+      <span id="total" class="text-sm text-ink/45"></span>
     </div>
 
-    <article class="md:grid md:grid-cols-2 md:gap-16 md:items-center">
-      <div class="max-w-[480px] w-full">
-        <div id="flip" class="flip">
-          <div class="flip-in aspect-[4/5]">
-            <!-- Лицьова сторона: фото -->
-            <div class="face bg-soft">
-              <div id="slides" class="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar"></div>
-              <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/45 to-transparent pointer-events-none"></div>
-              <div id="bars" class="absolute top-3 inset-x-4 flex gap-1.5 pointer-events-none"></div>
-              <span class="absolute bottom-4 left-4 inline-flex items-center gap-2 bg-white text-ink text-xs font-semibold px-3 py-1.5 rounded-full"><i class="w-1.5 h-1.5 rounded-full bg-gold"></i>В наявності</span>
-            </div>
-            <!-- Зворотна сторона: характеристики -->
-            <div class="face back bg-ink text-white p-8 flex flex-col justify-center">
-              <img src="img/logo.png" alt="" class="absolute -right-20 -bottom-20 w-64 h-64 rounded-full opacity-[.09] grayscale pointer-events-none">
-              <p class="relative font-display text-xl tracking-tight">BMW 530d xDrive</p>
-              <p class="relative mt-1 text-white/45 text-sm">Характеристики</p>
-              <dl class="relative mt-4">
-                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Рік</dt><dd class="font-semibold">2019</dd></div>
-                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Пробіг</dt><dd class="font-semibold">148 000 км</dd></div>
-                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Двигун</dt><dd class="font-semibold">3.0 л</dd></div>
-                <div class="flex justify-between items-baseline py-4 border-b border-white/10"><dt class="text-white/55">Паливо</dt><dd class="font-semibold">Дизель</dd></div>
-                <div class="flex justify-between items-baseline py-4"><dt class="text-white/55">Коробка</dt><dd class="font-semibold">Автомат, 4x4</dd></div>
-              </dl>
-            </div>
-          </div>
+    <!-- Пошук (липкий) -->
+    <div class="sticky top-16 z-20 -mx-5 px-5 py-3 bg-white/90 backdrop-blur">
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Пошук авто"
+                 placeholder="Марка, модель або рік, наприклад: ягуар"
+                 class="w-full h-12 bg-soft rounded-full pl-12 pr-12 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+          <button id="qClear" type="button" aria-label="Очистити пошук" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 place-items-center rounded-full hover:bg-ink/10">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
         </div>
-
-        <div class="mt-4 flex items-center justify-between">
-          <div class="flex items-center gap-1">
-            <button id="prev" aria-label="Попереднє фото" class="w-10 h-10 grid place-items-center rounded-full border border-ink/15 hover:border-ink transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
-            <span id="count" class="w-14 text-center text-sm tabular-nums text-ink/55"></span>
-            <button id="next" aria-label="Наступне фото" class="w-10 h-10 grid place-items-center rounded-full border border-ink/15 hover:border-ink transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
-          </div>
-          <button id="flipBtn" class="flex items-center gap-2 text-sm font-semibold border border-ink/15 hover:border-ink rounded-full pl-4 pr-3 h-10 transition"><span>Характеристики</span>
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0115-6.7L21 8M21 3v5h-5M21 12a9 9 0 01-15 6.7L3 16M3 21v-5h5"/></svg></button>
-        </div>
+        <button id="filterBtn" type="button" aria-expanded="false" aria-controls="panel" class="md:hidden relative h-12 px-4 inline-flex items-center gap-2 rounded-full border border-ink/15 font-semibold text-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          Фільтри
+          <span id="filterBadge" class="hidden min-w-5 h-5 px-1.5 rounded-full bg-gold text-ink text-xs font-bold items-center justify-center"></span>
+        </button>
       </div>
-
-      <div class="mt-8 md:mt-0">
-        <h3 id="carName" class="font-display font-medium text-[26px] md:text-4xl leading-tight tracking-tight">BMW 530d xDrive</h3>
-        <p class="mt-1.5 text-ink/55">5 Series, G30 · 2019 · Дизель</p>
-        <p class="mt-6 font-display font-medium text-[38px] md:text-5xl leading-none tracking-tight">$24 900</p>
-        <div class="hidden md:flex gap-3 mt-9">
-          <button id="openModal2" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити огляд / Дзвінок</button>
-          <a id="tgBtn2" href="#" target="_blank" rel="noopener" class="border border-ink/15 hover:border-ink font-semibold rounded-full px-7 py-4 transition">Telegram</a>
-        </div>
-      </div>
-    </article>
-
-    <div class="mt-16 border-t border-ink/10">
-      <article class="flex gap-4 items-center py-5 border-b border-ink/10 opacity-45">
-        <div class="w-16 h-16 shrink-0 rounded-2xl bg-soft grid place-items-center font-display text-sm text-ink/40">A6</div>
-        <div class="min-w-0 flex-1">
-          <h3 class="font-semibold line-through decoration-ink/40">Audi A6 Avant 2.0 TDI</h3>
-          <p class="text-sm text-ink/60">2018 · 162 000 км · Дизель</p>
-        </div>
-        <span class="text-sm font-semibold">Продано</span>
-      </article>
-      <article class="flex gap-4 items-center py-5 border-b border-ink/10">
-        <div class="w-16 h-16 shrink-0 rounded-2xl bg-soft grid place-items-center font-display text-sm text-ink/40">B8</div>
-        <div class="min-w-0 flex-1">
-          <h3 class="font-semibold">Volkswagen Passat B8</h3>
-          <p class="text-sm text-ink/60">2020 · 95 000 км · Бензин</p>
-          <div class="mt-2.5 h-[3px] rounded-full bg-ink/10 max-w-[220px]"><div class="h-full w-2/3 rounded-full bg-gold"></div></div>
-        </div>
-        <span class="text-sm text-right"><b class="font-semibold">В дорозі</b><span class="block text-ink/55">≈ 12 днів</span></span>
-      </article>
     </div>
+
+    <!-- Марки -->
+    <div id="brandChips" class="mt-1 -mx-5 px-5 flex gap-2 overflow-x-auto no-scrollbar pb-1" role="group" aria-label="Марка"></div>
+
+    <!-- Фільтри -->
+    <div id="panel" class="hidden md:grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6 pt-5 pb-6">
+      <div>
+        <p class="text-sm font-semibold mb-2.5">Ціна, zł</p>
+        <div class="grid grid-cols-2 gap-2">
+          <input id="pmin" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна від" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+          <input id="pmax" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна до" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+        </div>
+        <div id="priceQuick" class="mt-2.5 flex flex-wrap gap-2"></div>
+      </div>
+      <div>
+        <p class="text-sm font-semibold mb-2.5">Рік випуску</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="relative"><select id="ymin" aria-label="Рік від" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+          <div class="relative"><select id="ymax" aria-label="Рік до" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        </div>
+        <p class="text-sm font-semibold mt-5 mb-2.5">Пробіг</p>
+        <div class="relative"><select id="kmax" aria-label="Максимальний пробіг" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+      <div class="space-y-5">
+        <div><p class="text-sm font-semibold mb-2.5">Паливо</p><div id="fuelChips" class="flex flex-wrap gap-2"></div></div>
+        <div><p class="text-sm font-semibold mb-2.5">Коробка</p><div id="gearChips" class="flex flex-wrap gap-2"></div></div>
+        <div><p class="text-sm font-semibold mb-2.5">Статус</p><div id="statusChips" class="flex flex-wrap gap-2"></div></div>
+      </div>
+    </div>
+
+    <!-- Застосовані фільтри + результат -->
+    <div class="mt-4 border-t border-ink/10 pt-4">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p id="count" class="font-semibold" aria-live="polite"></p>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <select id="sort" aria-label="Сортування" class="h-10 bg-soft rounded-full pl-4 pr-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ink">
+              <option value="name">Назва А → Я</option>
+              <option value="name-desc">Назва Я → А</option>
+              <option value="price-asc">Спочатку дешевші</option>
+              <option value="price-desc">Спочатку дорожчі</option>
+              <option value="year-desc">Спочатку новіші</option>
+              <option value="year-asc">Спочатку старіші</option>
+              <option value="km-asc">Менший пробіг</option>
+            </select>
+            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+          <div class="hidden sm:flex rounded-full bg-soft p-1" role="group" aria-label="Вигляд">
+            <button id="viewGrid" type="button" aria-label="Плитка" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
+            <button id="viewList" type="button" aria-label="Список" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <div id="active" class="mt-3 flex flex-wrap gap-2"></div>
+    </div>
+
+    <div id="results" class="mt-6"></div>
   </section>
 
   <section class="mt-28 md:mt-40">
@@ -159,13 +163,48 @@
   <footer class="mt-24 py-8 border-t border-ink/10 text-sm text-ink/45">© Auto Komis</footer>
 </main>
 
+<!-- Нижня панель (телефон) -->
 <div class="fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur border-t border-ink/10 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
   <div class="grid grid-cols-5 gap-2 p-3">
-    <button id="openModal" class="col-span-3 bg-ink active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] transition">Замовити огляд / Дзвінок</button>
-    <a id="tgBtn" href="#" target="_blank" rel="noopener" class="col-span-2 border border-ink/20 active:scale-[.98] font-semibold rounded-full py-3.5 text-[15px] text-center transition">Telegram</a>
+    <button id="openBar" class="col-span-3 bg-ink active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] transition">Замовити огляд / Дзвінок</button>
+    <a id="tgBar" href="#" target="_blank" rel="noopener" class="col-span-2 border border-ink/20 active:scale-[.98] font-semibold rounded-full py-3.5 text-[15px] text-center transition">Telegram</a>
   </div>
 </div>
 
+<!-- ===== КАРТКА АВТО ===== -->
+<div id="detail" class="hidden fixed inset-0 z-40 items-end md:items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="dName">
+  <div id="dOverlay" class="absolute inset-0 bg-ink/50 backdrop-blur-sm"></div>
+  <div class="relative w-full md:max-w-4xl max-h-[94dvh] md:max-h-[90vh] overflow-y-auto bg-white rounded-t-[28px] md:rounded-[28px] shadow-2xl">
+    <button id="dClose" aria-label="Закрити" class="absolute top-4 right-4 z-10 w-10 h-10 grid place-items-center rounded-full bg-white/95 shadow ring-1 ring-ink/10 hover:bg-white">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="md:grid md:grid-cols-2">
+      <div class="relative bg-soft md:self-start">
+        <div id="dSlides" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar aspect-[4/5]"></div>
+        <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/45 to-transparent pointer-events-none"></div>
+        <div id="dBars" class="absolute top-3 inset-x-4 right-16 flex gap-1.5 pointer-events-none"></div>
+        <span id="dBadge"></span>
+        <div id="dNav" class="absolute bottom-4 right-4 flex items-center gap-1">
+          <button id="dPrev" aria-label="Попереднє фото" class="w-10 h-10 grid place-items-center rounded-full bg-white/95 hover:bg-white shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg></button>
+          <span id="dCount" class="min-w-12 text-center text-sm tabular-nums text-white font-medium"></span>
+          <button id="dNext" aria-label="Наступне фото" class="w-10 h-10 grid place-items-center rounded-full bg-white/95 hover:bg-white shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="p-6 md:p-10 flex flex-col" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
+        <h3 id="dName" class="font-display font-medium text-[26px] md:text-3xl leading-tight tracking-tight"></h3>
+        <p id="dSub" class="mt-1.5 text-ink/55"></p>
+        <p id="dPrice" class="mt-6 font-display font-medium text-[34px] md:text-4xl leading-none tracking-tight"></p>
+        <dl id="dSpecs" class="mt-6"></dl>
+        <div class="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+          <button id="dLead" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-6 py-4 transition">Замовити огляд</button>
+          <a id="dTg" href="#" target="_blank" rel="noopener" class="border border-ink/15 hover:border-ink font-semibold rounded-full px-6 py-4 text-center transition">Telegram</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ЗАЯВКА ===== -->
 <div id="modal" class="hidden fixed inset-0 z-50 items-end sm:items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div id="overlay" class="absolute inset-0 bg-ink/50 backdrop-blur-sm"></div>
   <div class="relative w-full max-w-md bg-white rounded-t-[28px] sm:rounded-[28px] p-6 shadow-2xl" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
@@ -175,7 +214,8 @@
     <div id="formView">
       <h3 id="modalTitle" class="font-display font-medium text-xl pr-12">Замовити огляд</h3>
       <p class="text-ink/60 mt-2">Залиште номер — передзвонимо протягом 15 хвилин.</p>
-      <form id="leadForm" class="mt-6 space-y-3" novalidate>
+      <p id="leadCar" class="hidden mt-4 text-sm bg-soft rounded-2xl px-4 py-3"></p>
+      <form id="leadForm" class="mt-5 space-y-3" novalidate>
         <input id="name" name="name" type="text" placeholder="Твоє ім'я" autocomplete="name" required class="w-full bg-soft rounded-2xl px-4 py-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
         <input id="phone" name="phone" type="tel" placeholder="Номер телефону" autocomplete="tel" inputmode="tel" required class="w-full bg-soft rounded-2xl px-4 py-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
         <p id="formError" class="hidden text-sm text-red-600"></p>
@@ -191,56 +231,419 @@
 
 <script>
   // ===== Налаштування =====
-  const CAR_NAME    = 'BMW 530d xDrive';
   const TG_USERNAME = 'your_telegram_username';   // без @
   const API_URL     = '/api/lead';                // бекенд (server.js)
-  const PHOTOS      = ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg']; // свої фото
+  const CUR         = 'zł';                       // валюта цін
 
-  const FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><rect width="400" height="500" fill="#e5e7eb"/><text x="200" y="255" fill="#9ca3af" font-family="sans-serif" font-size="18" text-anchor="middle">Фото авто</text></svg>');
+  // ===== КАТАЛОГ =====
+  // Додати авто = додати об'єкт у цей список. Усі поля потрібні, крім awd, eta, progress.
+  //  status: 'stock' (в наявності) | 'transit' (в дорозі) | 'sold' (продано)
+  //  photos: шляхи до фото. Якщо порожньо — показується заглушка з назвою.
+  // УВАГА: окрім BMW, це приклади — замініть на свої авто та ціни.
+  const CARS = [
+    { id: 'bmw-530d',   brand: 'BMW',           model: '530d xDrive',        sub: '5 Series, G30',  year: 2019, km: 148000, engine: '3.0 л', fuel: 'Дизель', gearbox: 'Автомат',  awd: true,  price: 89900,  status: 'stock',
+      photos: ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg'] },
+    { id: 'passat-b8',  brand: 'Volkswagen',    model: 'Passat B8',          sub: '1.5 TSI',        year: 2020, km: 95000,  engine: '1.5 л', fuel: 'Бензин', gearbox: 'Автомат',  price: 69900,  status: 'transit', eta: '≈ 12 днів', progress: 66, photos: [] },
+    { id: 'audi-a6',    brand: 'Audi',          model: 'A6 Avant 2.0 TDI',   sub: 'C8',             year: 2018, km: 162000, engine: '2.0 л', fuel: 'Дизель', gearbox: 'Автомат',  price: 74500,  status: 'sold', photos: [] },
+    { id: 'jaguar-xf',  brand: 'Jaguar',        model: 'XF 3.0 V6 Diesel',   sub: 'X250',           year: 2010, km: 187000, engine: '3.0 л', fuel: 'Дизель', gearbox: 'Автомат',  price: 32900,  status: 'stock', photos: [] },
+    { id: 'jaguar-fp',  brand: 'Jaguar',        model: 'F-Pace 2.0d AWD',    sub: 'X761',           year: 2021, km: 64000,  engine: '2.0 л', fuel: 'Дизель', gearbox: 'Автомат',  awd: true,  price: 139900, status: 'stock', photos: [] },
+    { id: 'merc-c220',  brand: 'Mercedes-Benz', model: 'C 220 d',            sub: 'W205',           year: 2017, km: 121000, engine: '2.2 л', fuel: 'Дизель', gearbox: 'Автомат',  price: 67500,  status: 'stock', photos: [] },
+    { id: 'octavia',    brand: 'Škoda',         model: 'Octavia 1.5 TSI',    sub: 'A7',             year: 2019, km: 88000,  engine: '1.5 л', fuel: 'Бензин', gearbox: 'Механіка', price: 49900,  status: 'stock', photos: [] },
+    { id: 'xc60',       brand: 'Volvo',         model: 'XC60 D4 AWD',        sub: 'II покоління',   year: 2018, km: 134000, engine: '2.0 л', fuel: 'Дизель', gearbox: 'Автомат',  awd: true,  price: 94900,  status: 'transit', eta: '≈ 6 днів', progress: 80, photos: [] },
+    { id: 'model3',     brand: 'Tesla',         model: 'Model 3 Long Range', sub: 'Dual Motor',     year: 2020, km: 71000,  engine: '75 кВт·год', fuel: 'Електро', gearbox: 'Автомат', awd: true, price: 109900, status: 'stock', photos: [] },
+    { id: 'camry',      brand: 'Toyota',        model: 'Camry 2.5 Hybrid',   sub: 'XV70',           year: 2021, km: 52000,  engine: '2.5 л', fuel: 'Гібрид', gearbox: 'Автомат',  price: 99900,  status: 'stock', photos: [] },
+    { id: 'crv',        brand: 'Honda',         model: 'CR-V 1.5 Turbo',     sub: 'V покоління',    year: 2016, km: 112000, engine: '1.5 л', fuel: 'Бензин', gearbox: 'Автомат',  price: 55900,  status: 'stock', photos: [] },
+    { id: 'focus',      brand: 'Ford',          model: 'Focus 1.0 EcoBoost', sub: 'Mk3',            year: 2015, km: 98000,  engine: '1.0 л', fuel: 'Бензин', gearbox: 'Механіка', price: 24900,  status: 'stock', photos: [] }
+  ];
+
+  // Українські та інші написання марок — щоб «ягуар», «мерс», «фольксваген» теж знаходили авто
+  const ALIASES = {
+    'BMW': 'бмв бмвшка', 'Audi': 'ауді ауди', 'Volkswagen': 'фольксваген фольцваген vw вв',
+    'Jaguar': 'ягуар', 'Mercedes-Benz': 'мерседес мерс бенц mercedes', 'Škoda': 'шкода skoda',
+    'Volvo': 'вольво', 'Tesla': 'тесла', 'Toyota': 'тойота', 'Honda': 'хонда', 'Ford': 'форд',
+    'Opel': 'опель', 'Renault': 'рено', 'Peugeot': 'пежо', 'Mazda': 'мазда', 'Kia': 'кіа киа',
+    'Hyundai': 'хюндай хьюндай', 'Nissan': 'ніссан ниссан', 'Porsche': 'порше', 'Lexus': 'лексус',
+    'Land Rover': 'ленд ровер рендж', 'Mini': 'міні', 'Fiat': 'фіат'
+  };
+  const STATUS = [['all', 'Усі'], ['stock', 'В наявності'], ['transit', 'В дорозі'], ['sold', 'Продано']];
+  const KM_STEPS = [50000, 100000, 150000, 200000];
+  const PRICE_QUICK = [
+    { l: 'до 50 000',        min: null,   max: 50000 },
+    { l: '50 000 – 100 000', min: 50000,  max: 100000 },
+    { l: 'від 100 000',      min: 100000, max: null }
+  ];
+
+  // ===== Утиліти =====
   const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const fmt = n => Number(n).toLocaleString('uk-UA');
+  const money = n => fmt(n) + '\u00A0' + CUR;
+  const nameOf = c => c.brand + ' ' + c.model;
+  const placeholder = c => 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500"><rect width="400" height="500" fill="#ececee"/><text x="200" y="244" fill="#8e8e96" font-family="sans-serif" font-size="24" font-weight="600" text-anchor="middle">${esc(c.brand)}</text><text x="200" y="278" fill="#a4a4ab" font-family="sans-serif" font-size="18" text-anchor="middle">${esc(c.model)}</text></svg>`);
+  const photosOf = c => c.photos && c.photos.length ? c.photos : [placeholder(c)];
+  const imgTag = (c, src, cls, extra = '') => `<img src="${esc(src)}" alt="${esc(nameOf(c))}" class="${cls}" draggable="false" ${extra} data-fb="${esc(placeholder(c))}" onerror="this.onerror=null;this.src=this.dataset.fb">`;
 
-  // ===== Галерея (свайп + лічильник-сторіс) =====
-  const slides = $('slides'), bars = $('bars');
-  let idx = 0;
-  PHOTOS.forEach((src, i) => {
-    const s = document.createElement('div');
-    s.className = 'min-w-full snap-center aspect-[4/5]';
-    s.innerHTML = `<img src="${src}" alt="${CAR_NAME} — фото ${i + 1}" class="w-full h-full object-cover" draggable="false" ${i ? 'loading="lazy"' : ''} onerror="this.onerror=null;this.src=FALLBACK">`;
-    slides.appendChild(s);
-    const b = document.createElement('i');
-    b.className = 'block h-[3px] flex-1 rounded-full bg-white/45 transition-colors';
-    bars.appendChild(b);
+  // ===== Розумний пошук =====
+  // нормалізація: регістр, діакритика (Š → s), апострофи
+  const norm = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[’'`ʼ]/g, '').replace(/ё/g, 'е');
+  const words = s => norm(s).split(/[^a-z0-9а-яіїєґ.]+/).filter(Boolean);
+  function lev(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 9;
+    let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  CARS.forEach(c => {
+    c._w = words([c.brand, c.model, c.sub, c.year, c.fuel, c.gearbox, c.engine, c.awd ? '4x4 повний привід' : '', ALIASES[c.brand] || ''].join(' '));
+    c._t = c._w.join(' ');
   });
-  function mark() { $('count').textContent = (idx + 1) + ' / ' + PHOTOS.length; [...bars.children].forEach((b, i) => { b.className = b.className.replace(/bg-white(\/45)?/, i <= idx ? 'bg-white' : 'bg-white/45'); }); }
-  function go(n) { slides.scrollTo({ left: ((n + PHOTOS.length) % PHOTOS.length) * slides.clientWidth, behavior: 'smooth' }); }
-  slides.addEventListener('scroll', () => {
-    const i = Math.round(slides.scrollLeft / slides.clientWidth);
-    if (i !== idx) { idx = i; mark(); }
-  }, { passive: true });
-  $('prev').onclick = () => go(idx - 1);
-  $('next').onclick = () => go(idx + 1);
-  mark();
+  // токен знаходить авто: початок слова, фрагмент, або одна-дві помилки в написанні
+  function tokenMatch(t, c) {
+    if (c._w.some(w => w.startsWith(t))) return true;
+    if (t.length >= 3 && c._t.includes(t)) return true;
+    if (t.length >= 4 && !/^[\d.]+$/.test(t)) {
+      const d = t.length >= 7 ? 2 : 1;
+      return c._w.some(w => w.length >= 4 && Math.min(lev(t, w), lev(t, w.slice(0, t.length))) <= d);
+    }
+    return false;
+  }
 
-  // ===== Telegram =====
-  const tgUrl = `https://t.me/${TG_USERNAME}?text=${encodeURIComponent('Привіт! Цікавить авто ' + CAR_NAME)}`;
-  $('tgBtn').href = tgUrl; $('tgBtn2').href = tgUrl;
+  // ===== Стан фільтрів =====
+  const S = { q: '', pmin: null, pmax: null, ymin: null, ymax: null, kmax: null, brands: new Set(), fuels: new Set(), gears: new Set(), status: 'all', sort: 'name', view: 'grid' };
+  let qTok = [];
+  let curCar = null;   // відкрита картка
+  let leadCtx = '';    // авто/запит для заявки
 
-  // ===== Переворот картки (на телефоні — по кнопці) =====
-  $('flipBtn').onclick = () => { const on = $('flip').classList.toggle('on'); $('flipBtn').firstElementChild.textContent = on ? 'Фото' : 'Характеристики'; };
+  const BRANDS = [...new Set(CARS.map(c => c.brand))].sort((a, b) => a.localeCompare(b, 'en'));
+  const FUELS  = [...new Set(CARS.map(c => c.fuel))].sort((a, b) => a.localeCompare(b, 'uk'));
+  const GEARS  = [...new Set(CARS.map(c => c.gearbox))].sort((a, b) => a.localeCompare(b, 'uk'));
+  const YEARS  = CARS.map(c => c.year);
+  const PRICES = CARS.map(c => c.price);
 
-  // ===== Модальне вікно =====
+  // skip — яка група фільтрів ігнорується (для лічильників на чіпах і підказок)
+  function match(c, skip) {
+    if (skip !== 'q' && qTok.length && !qTok.every(t => tokenMatch(t, c))) return false;
+    if (skip !== 'price' && ((S.pmin != null && c.price < S.pmin) || (S.pmax != null && c.price > S.pmax))) return false;
+    if (skip !== 'year' && ((S.ymin && c.year < S.ymin) || (S.ymax && c.year > S.ymax))) return false;
+    if (skip !== 'km' && S.kmax && c.km > S.kmax) return false;
+    if (skip !== 'brand' && S.brands.size && !S.brands.has(c.brand)) return false;
+    if (skip !== 'fuel' && S.fuels.size && !S.fuels.has(c.fuel)) return false;
+    if (skip !== 'gear' && S.gears.size && !S.gears.has(c.gearbox)) return false;
+    if (skip !== 'status' && S.status !== 'all' && c.status !== S.status) return false;
+    return true;
+  }
+
+  const cmpName = (a, b) => nameOf(a).localeCompare(nameOf(b), 'en', { numeric: true, sensitivity: 'base' }) || b.year - a.year;
+  const SORTS = {
+    'name': cmpName,
+    'name-desc': (a, b) => nameOf(b).localeCompare(nameOf(a), 'en', { numeric: true, sensitivity: 'base' }) || b.year - a.year,
+    'price-asc': (a, b) => a.price - b.price,
+    'price-desc': (a, b) => b.price - a.price,
+    'year-desc': (a, b) => b.year - a.year || a.price - b.price,
+    'year-asc': (a, b) => a.year - b.year || a.price - b.price,
+    'km-asc': (a, b) => a.km - b.km
+  };
+  // продані завжди внизу, незалежно від сортування
+  const sortList = list => list.slice().sort((a, b) => ((a.status === 'sold') - (b.status === 'sold')) || SORTS[S.sort](a, b));
+
+  // «100к», «100 000», «1,5 тис» → число
+  function parseNum(v) {
+    const m = String(v).toLowerCase().replace(/[\s\u00A0]/g, '').replace(',', '.').match(/^(\d+(?:\.\d+)?)(к|k|тис|тыс)?\.?$/);
+    if (!m) return null;
+    const n = parseFloat(m[1]) * (m[2] ? 1000 : 1);
+    return Math.round(n);
+  }
+
+  // ===== URL (щоб можна було поділитись пошуком) =====
+  function writeURL() {
+    const p = new URLSearchParams();
+    if (S.q) p.set('q', S.q);
+    if (S.pmin != null) p.set('pmin', S.pmin);
+    if (S.pmax != null) p.set('pmax', S.pmax);
+    if (S.ymin) p.set('ymin', S.ymin);
+    if (S.ymax) p.set('ymax', S.ymax);
+    if (S.kmax) p.set('km', S.kmax);
+    if (S.brands.size) p.set('b', [...S.brands].join(','));
+    if (S.fuels.size) p.set('f', [...S.fuels].join(','));
+    if (S.gears.size) p.set('g', [...S.gears].join(','));
+    if (S.status !== 'all') p.set('s', S.status);
+    if (S.sort !== 'name') p.set('sort', S.sort);
+    if (S.view !== 'grid') p.set('v', S.view);
+    if (curCar) p.set('car', curCar.id);
+    const qs = p.toString();
+    try { history.replaceState(null, '', qs ? '?' + qs : location.pathname); } catch (_) {}
+  }
+  function readURL() {
+    const p = new URLSearchParams(location.search);
+    const num = k => { const n = parseInt(p.get(k), 10); return Number.isFinite(n) ? n : null; };
+    S.q = p.get('q') || '';
+    S.pmin = num('pmin'); S.pmax = num('pmax'); S.ymin = num('ymin'); S.ymax = num('ymax'); S.kmax = num('km');
+    const set = (k, allowed) => new Set((p.get(k) || '').split(',').filter(x => allowed.includes(x)));
+    S.brands = set('b', BRANDS); S.fuels = set('f', FUELS); S.gears = set('g', GEARS);
+    S.status = STATUS.some(s => s[0] === p.get('s')) ? p.get('s') : 'all';
+    S.sort = SORTS[p.get('sort')] ? p.get('sort') : 'name';
+    S.view = p.get('v') === 'list' ? 'list' : 'grid';
+    qTok = words(S.q);
+    return CARS.find(c => c.id === p.get('car')) || null;
+  }
+
+  // ===== Відображення =====
+  const chip = (attr, val, label, count, on) =>
+    `<button type="button" data-${attr}="${esc(val)}" aria-pressed="${on}" class="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-full border text-sm font-medium transition ${on ? 'bg-ink text-white border-ink' : 'border-ink/15 hover:border-ink'} ${!on && count === 0 ? 'opacity-40' : ''}">${esc(label)}${count != null ? `<span class="text-xs tabular-nums ${on ? 'text-white/60' : 'text-ink/45'}">${count}</span>` : ''}</button>`;
+
+  function badge(c, pos) {
+    const base = `${pos} inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full `;
+    if (c.status === 'sold') return `<span class="${base} bg-ink text-white">Продано</span>`;
+    if (c.status === 'transit') return `<span class="${base} bg-white text-ink"><i class="w-1.5 h-1.5 rounded-full bg-ink/40"></i>В дорозі${c.eta ? ', ' + esc(c.eta) : ''}</span>`;
+    return `<span class="${base} bg-white text-ink"><i class="w-1.5 h-1.5 rounded-full bg-gold"></i>В наявності</span>`;
+  }
+
+  function card(c) {
+    const sold = c.status === 'sold', list = S.view === 'list';
+    const photos = photosOf(c);
+    return `<article>
+      <a href="?car=${esc(c.id)}" data-open="${esc(c.id)}" class="group block ${list ? 'sm:flex sm:gap-7 sm:items-center' : ''} rounded-3xl">
+        <div class="relative aspect-[4/3] overflow-hidden rounded-3xl bg-soft ${list ? 'sm:w-[42%] sm:shrink-0' : ''}">
+          ${imgTag(c, photos[0], 'w-full h-full object-cover ' + (sold ? 'grayscale opacity-60' : ''), 'loading="lazy"')}
+          ${badge(c, 'absolute bottom-3 left-3')}
+          ${photos.length > 1 ? `<span class="absolute bottom-3 right-3 text-xs font-semibold text-white bg-ink/60 backdrop-blur px-2.5 py-1.5 rounded-full">${photos.length} фото</span>` : ''}
+        </div>
+        <div class="mt-4 ${list ? 'sm:mt-0 sm:flex-1' : ''} ${sold ? 'opacity-55' : ''}">
+          <h3 class="font-semibold text-lg leading-snug group-hover:underline decoration-gold decoration-2 underline-offset-4">${esc(nameOf(c))}</h3>
+          <p class="text-sm text-ink/55 mt-0.5">${esc(c.sub)}</p>
+          <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/70">
+            <li>${c.year}</li><li>${fmt(c.km)}&nbsp;км</li><li>${esc(c.fuel)}</li><li>${esc(c.gearbox)}${c.awd ? ', 4x4' : ''}</li>
+          </ul>
+          ${c.status === 'transit' ? `<div class="mt-3 h-[3px] rounded-full bg-ink/10 max-w-[220px]"><div class="h-full rounded-full bg-gold" style="width:${+c.progress || 0}%"></div></div>` : ''}
+          <p class="mt-4 font-display font-medium text-2xl tracking-tight ${sold ? 'line-through decoration-ink/40' : ''}">${money(c.price)}</p>
+        </div>
+      </a>
+    </article>`;
+  }
+
+  function actives() {
+    const a = [];
+    if (S.q) a.push({ k: 'q', l: '«' + S.q + '»' });
+    if (S.pmin != null || S.pmax != null)
+      a.push({ k: 'price', l: 'Ціна ' + (S.pmin != null && S.pmax != null ? `${fmt(S.pmin)} – ${fmt(S.pmax)}` : S.pmin != null ? 'від ' + fmt(S.pmin) : 'до ' + fmt(S.pmax)) + ' ' + CUR });
+    if (S.ymin || S.ymax)
+      a.push({ k: 'year', l: 'Рік ' + (S.ymin && S.ymax ? `${S.ymin} – ${S.ymax}` : S.ymin ? 'від ' + S.ymin : 'до ' + S.ymax) });
+    if (S.kmax) a.push({ k: 'km', l: 'Пробіг до ' + fmt(S.kmax) + ' км' });
+    S.brands.forEach(b => a.push({ k: 'b:' + b, l: b }));
+    S.fuels.forEach(f => a.push({ k: 'f:' + f, l: f }));
+    S.gears.forEach(g => a.push({ k: 'g:' + g, l: g }));
+    if (S.status !== 'all') a.push({ k: 'status', l: STATUS.find(s => s[0] === S.status)[1] });
+    return a;
+  }
+
+  const RELAX = { price: 'без обмеження ціни', year: 'без обмеження року', km: 'без обмеження пробігу', brand: 'з усіх марок', fuel: 'з будь-яким паливом', gear: 'з будь-якою коробкою', status: 'з будь-яким статусом', q: 'без пошукового запиту' };
+
+  function emptyHTML() {
+    const hints = Object.keys(RELAX).map(k => ({ k, n: CARS.filter(c => match(c, k)).length }))
+      .filter(h => h.n > 0 && actives().length > 1 || h.k === 'q' && h.n > 0 && S.q)
+      .sort((a, b) => b.n - a.n).slice(0, 3);
+    return `<div class="py-14 md:py-20 text-center max-w-md mx-auto">
+      <p class="font-display font-medium text-xl">Нічого не знайдено</p>
+      <p class="mt-3 text-ink/60">Спробуйте змінити запит або послабити фільтри. Якщо потрібного авто немає, привеземо його під замовлення.</p>
+      ${hints.length ? `<div class="mt-6 flex flex-wrap justify-center gap-2">${hints.map(h => `<button type="button" data-relax="${h.k}" class="h-9 px-4 rounded-full border border-ink/15 hover:border-ink text-sm font-medium transition">Показати ${h.n} ${RELAX[h.k]}</button>`).join('')}</div>` : ''}
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <button type="button" data-reset class="border border-ink/15 hover:border-ink font-semibold rounded-full px-6 py-3.5 transition">Скинути фільтри</button>
+        <button type="button" data-lead-search class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-6 py-3.5 transition">Замовити підбір</button>
+      </div>
+    </div>`;
+  }
+
+  function render() {
+    // чіпи з лічильниками (враховують решту фільтрів)
+    const cnt = (skip, pred) => CARS.filter(c => match(c, skip) && pred(c)).length;
+    $('brandChips').innerHTML = chip('brand', '', 'Усі марки', null, !S.brands.size) +
+      BRANDS.map(b => chip('brand', b, b, cnt('brand', c => c.brand === b), S.brands.has(b))).join('');
+    $('fuelChips').innerHTML = FUELS.map(f => chip('fuel', f, f, cnt('fuel', c => c.fuel === f), S.fuels.has(f))).join('');
+    $('gearChips').innerHTML = GEARS.map(g => chip('gear', g, g, cnt('gear', c => c.gearbox === g), S.gears.has(g))).join('');
+    $('statusChips').innerHTML = STATUS.map(([k, l]) => chip('status', k, l, cnt('status', c => k === 'all' || c.status === k), S.status === k)).join('');
+    $('priceQuick').innerHTML = PRICE_QUICK.map((p, i) => chip('qp', i, p.l, null, S.pmin === p.min && S.pmax === p.max)).join('');
+
+    const list = sortList(CARS.filter(c => match(c)));
+    const act = actives();
+    $('count').textContent = list.length ? `Знайдено ${list.length} авто` : 'Нічого не знайдено';
+    $('active').innerHTML = act.length
+      ? act.map(a => `<button type="button" data-clear="${esc(a.k)}" class="inline-flex items-center gap-2 h-8 pl-3.5 pr-2.5 rounded-full bg-soft hover:bg-ink/10 text-sm font-medium transition" aria-label="Прибрати: ${esc(a.l)}">${esc(a.l)}<svg class="w-3.5 h-3.5 text-ink/50" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`).join('') +
+        (act.length > 1 ? `<button type="button" data-reset class="h-8 px-3 text-sm font-semibold underline decoration-gold decoration-2 underline-offset-4">Скинути все</button>` : '')
+      : '';
+
+    const n = act.filter(a => a.k !== 'q').length;
+    const fb = $('filterBadge'); fb.textContent = n; fb.classList.toggle('hidden', !n); fb.classList.toggle('inline-flex', !!n);
+    $('qClear').classList.toggle('hidden', !S.q); $('qClear').classList.toggle('grid', !!S.q);
+
+    const res = $('results');
+    res.className = 'mt-6 ' + (list.length && S.view === 'grid' ? 'grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3' : list.length ? 'grid gap-8' : '');
+    res.innerHTML = list.length ? list.map(card).join('') : emptyHTML();
+
+    const on = 'bg-white shadow-sm', off = 'text-ink/50';
+    $('viewGrid').className = 'w-8 h-8 grid place-items-center rounded-full ' + (S.view === 'grid' ? on : off);
+    $('viewList').className = 'w-8 h-8 grid place-items-center rounded-full ' + (S.view === 'list' ? on : off);
+    writeURL();
+  }
+
+  // поля вводу оновлюємо лише коли змінює код (не під час набору)
+  function syncInputs() {
+    $('q').value = S.q;
+    $('pmin').value = S.pmin != null ? fmt(S.pmin) : '';
+    $('pmax').value = S.pmax != null ? fmt(S.pmax) : '';
+    $('ymin').value = S.ymin || ''; $('ymax').value = S.ymax || '';
+    $('kmax').value = S.kmax || ''; $('sort').value = S.sort;
+  }
+  function resetFilters() {
+    Object.assign(S, { q: '', pmin: null, pmax: null, ymin: null, ymax: null, kmax: null, status: 'all' });
+    S.brands.clear(); S.fuels.clear(); S.gears.clear(); qTok = [];
+    syncInputs(); render();
+  }
+  function clearKey(k) {
+    if (k === 'q') { S.q = ''; qTok = []; }
+    else if (k === 'price') { S.pmin = S.pmax = null; }
+    else if (k === 'year') { S.ymin = S.ymax = null; }
+    else if (k === 'km') { S.kmax = null; }
+    else if (k === 'status') { S.status = 'all'; }
+    else if (k === 'brand') S.brands.clear();
+    else if (k === 'fuel') S.fuels.clear();
+    else if (k === 'gear') S.gears.clear();
+    else { const [t, v] = [k.slice(0, 1), k.slice(2)]; (t === 'b' ? S.brands : t === 'f' ? S.fuels : S.gears).delete(v); }
+    syncInputs(); render();
+  }
+  const toggle = (set, v) => { set.has(v) ? set.delete(v) : set.add(v); render(); };
+
+  // ===== Ініціалізація полів =====
+  const yMin = Math.min(...YEARS), yMax = Math.max(...YEARS);
+  const yearOpts = label => `<option value="">${label}</option>` + Array.from({ length: yMax - yMin + 1 }, (_, i) => yMax - i).map(y => `<option value="${y}">${y}</option>`).join('');
+  $('ymin').innerHTML = yearOpts('Рік від'); $('ymax').innerHTML = yearOpts('Рік до');
+  $('kmax').innerHTML = '<option value="">Будь-який</option>' + KM_STEPS.map(k => `<option value="${k}">до ${fmt(k)} км</option>`).join('');
+  $('pmin').placeholder = 'від ' + fmt(Math.min(...PRICES));
+  $('pmax').placeholder = 'до ' + fmt(Math.max(...PRICES));
+
+  // ===== Події фільтрів =====
+  $('q').addEventListener('input', e => { S.q = e.target.value; qTok = words(S.q); render(); });
+  $('q').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+  $('qClear').onclick = () => { clearKey('q'); $('q').focus(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && !modalOpen() ) { e.preventDefault(); $('q').focus(); }
+  });
+
+  const swapIfReversed = (a, b) => { if (S[a] != null && S[b] != null && S[a] > S[b]) [S[a], S[b]] = [S[b], S[a]]; };
+  ['pmin', 'pmax'].forEach(id => {
+    $(id).addEventListener('input', e => { S[id] = parseNum(e.target.value); render(); });
+    $(id).addEventListener('change', () => { swapIfReversed('pmin', 'pmax'); syncInputs(); render(); });
+  });
+  ['ymin', 'ymax'].forEach(id => $(id).addEventListener('change', e => { S[id] = parseInt(e.target.value, 10) || null; swapIfReversed('ymin', 'ymax'); syncInputs(); render(); }));
+  $('kmax').addEventListener('change', e => { S.kmax = parseInt(e.target.value, 10) || null; render(); });
+  $('sort').addEventListener('change', e => { S.sort = e.target.value; render(); });
+  $('viewGrid').onclick = () => { S.view = 'grid'; render(); };
+  $('viewList').onclick = () => { S.view = 'list'; render(); };
+  $('filterBtn').onclick = () => { const o = $('panel').classList.toggle('open'); $('filterBtn').setAttribute('aria-expanded', o); };
+
+  let lastFocus = null;
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-brand],[data-fuel],[data-gear],[data-status],[data-qp],[data-clear],[data-reset],[data-relax],[data-open],[data-lead-search]');
+    if (!t) return;
+    const d = t.dataset;
+    if ('open' in d) { e.preventDefault(); lastFocus = t; return openCar(CARS.find(c => c.id === d.open)); }
+    if ('brand' in d) { d.brand ? toggle(S.brands, d.brand) : (S.brands.clear(), render()); }
+    else if ('fuel' in d) toggle(S.fuels, d.fuel);
+    else if ('gear' in d) toggle(S.gears, d.gear);
+    else if ('status' in d) { S.status = d.status; render(); }
+    else if ('qp' in d) {
+      const p = PRICE_QUICK[+d.qp], on = S.pmin === p.min && S.pmax === p.max;
+      S.pmin = on ? null : p.min; S.pmax = on ? null : p.max; syncInputs(); render();
+    }
+    else if ('clear' in d) clearKey(d.clear);
+    else if ('reset' in d) resetFilters();
+    else if ('relax' in d) clearKey(d.relax);
+    else if ('leadSearch' in d) openLead(searchSummary());
+  });
+
+  // ===== Галерея в картці авто =====
+  const dSlides = $('dSlides'), dBars = $('dBars');
+  let dIdx = 0, dLen = 1;
+  function dMark() {
+    $('dCount').textContent = (dIdx + 1) + ' / ' + dLen;
+    [...dBars.children].forEach((b, i) => { b.className = 'block h-[3px] flex-1 rounded-full transition-colors ' + (i <= dIdx ? 'bg-white' : 'bg-white/45'); });
+  }
+  const dGo = n => dSlides.scrollTo({ left: ((n + dLen) % dLen) * dSlides.clientWidth, behavior: 'smooth' });
+  dSlides.addEventListener('scroll', () => { const i = Math.round(dSlides.scrollLeft / dSlides.clientWidth); if (i !== dIdx) { dIdx = i; dMark(); } }, { passive: true });
+  $('dPrev').onclick = () => dGo(dIdx - 1);
+  $('dNext').onclick = () => dGo(dIdx + 1);
+
+  const tgUrl = text => `https://t.me/${TG_USERNAME}?text=${encodeURIComponent(text)}`;
+  $('tgBar').href = tgUrl('Привіт! Цікавить авто з каталогу');
+
+  function openCar(c) {
+    if (!c) return;
+    curCar = c;
+    const photos = photosOf(c); dLen = photos.length; dIdx = 0;
+    dSlides.innerHTML = photos.map((src, i) => `<div class="min-w-full snap-center aspect-[4/5]">${imgTag(c, src, 'w-full h-full object-cover ' + (c.status === 'sold' ? 'grayscale opacity-70' : ''), i ? 'loading="lazy"' : '')}</div>`).join('');
+    dSlides.scrollLeft = 0;
+    dBars.innerHTML = photos.map(() => '<i></i>').join('');
+    dBars.classList.toggle('hidden', dLen < 2);
+    $('dNav').classList.toggle('hidden', dLen < 2);
+    $('dBadge').outerHTML = badge(c, 'absolute bottom-4 left-4').replace('<span', '<span id="dBadge"');
+    dMark();
+    $('dName').textContent = nameOf(c);
+    $('dSub').textContent = c.sub;
+    $('dPrice').textContent = money(c.price);
+    $('dPrice').className = 'mt-6 font-display font-medium text-[34px] md:text-4xl leading-none tracking-tight' + (c.status === 'sold' ? ' line-through decoration-ink/40' : '');
+    const rows = [['Рік', c.year], ['Пробіг', fmt(c.km) + ' км'], ['Двигун', c.engine], ['Паливо', c.fuel], ['Коробка', c.gearbox + (c.awd ? ', 4x4' : '')]];
+    if (c.status === 'transit') rows.push(['Статус', 'В дорозі' + (c.eta ? ', ' + c.eta : '')]);
+    $('dSpecs').innerHTML = rows.map(([k, v], i) => `<div class="flex justify-between items-baseline py-3.5 ${i < rows.length - 1 ? 'border-b border-ink/10' : ''}"><dt class="text-ink/55">${esc(k)}</dt><dd class="font-semibold text-right">${esc(v)}</dd></div>`).join('');
+    const sold = c.status === 'sold';
+    $('dLead').textContent = sold ? 'Підібрати схоже' : 'Замовити огляд';
+    $('dTg').href = tgUrl(sold ? `Привіт! Шукаю авто, схоже на ${nameOf(c)}` : `Привіт! Цікавить ${nameOf(c)}, ${c.year}`);
+    $('detail').classList.replace('hidden', 'flex');
+    $('detail').querySelector('.overflow-y-auto').scrollTop = 0;
+    lockScroll(); writeURL();
+    setTimeout(() => $('dClose').focus(), 50);
+  }
+  function closeDetail() {
+    if (!curCar) return;
+    curCar = null; $('detail').classList.replace('flex', 'hidden'); lockScroll(); writeURL();
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+  }
+  $('dClose').onclick = closeDetail; $('dOverlay').onclick = closeDetail;
+  $('dLead').onclick = () => openLead(curCar.status === 'sold'
+    ? `Підбір, схожий на ${nameOf(curCar)} (продано)`
+    : `${nameOf(curCar)}, ${curCar.year}, ${money(curCar.price)}`);
+
+  // ===== Заявка =====
   const modal = $('modal'), form = $('leadForm'), errBox = $('formError'), submitBtn = $('submitBtn');
-  function openModal() {
+  const modalOpen = () => !modal.classList.contains('hidden') || !$('detail').classList.contains('hidden');
+  const lockScroll = () => { document.body.style.overflow = modalOpen() ? 'hidden' : ''; };
+
+  function searchSummary() {
+    const a = actives();
+    return a.length ? ('Підбір: ' + a.map(x => x.l).join(', ')).slice(0, 100) : 'Підбір під замовлення';
+  }
+  function openLead(ctx) {
+    leadCtx = (ctx || searchSummary()).slice(0, 100);
+    const lc = $('leadCar'); lc.textContent = leadCtx; lc.classList.remove('hidden');
     $('formView').classList.remove('hidden'); $('doneView').classList.add('hidden'); errBox.classList.add('hidden');
-    modal.classList.replace('hidden', 'flex'); document.body.style.overflow = 'hidden';
+    modal.classList.replace('hidden', 'flex'); lockScroll();
     setTimeout(() => $('name').focus(), 50);
   }
-  function closeModal() { modal.classList.replace('flex', 'hidden'); document.body.style.overflow = ''; }
-  $('openModal').onclick = openModal; $('openModal2').onclick = openModal; $('openModal3').onclick = openModal;
-  $('closeModal').onclick = closeModal;
-  $('overlay').onclick = closeModal;
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  function closeLead() { modal.classList.replace('flex', 'hidden'); lockScroll(); }
+  $('openHero').onclick = () => openLead('Підбір під замовлення');
+  $('openBar').onclick = () => openLead(curCar ? null : searchSummary());
+  $('closeModal').onclick = closeLead;
+  $('overlay').onclick = closeLead;
+
+  document.addEventListener('keydown', e => {
+    const leadOpen = !modal.classList.contains('hidden');
+    if (e.key === 'Escape') { leadOpen ? closeLead() : closeDetail(); }
+    else if (curCar && !leadOpen && dLen > 1 && e.key === 'ArrowLeft') dGo(dIdx - 1);
+    else if (curCar && !leadOpen && dLen > 1 && e.key === 'ArrowRight') dGo(dIdx + 1);
+  });
   const showError = m => { errBox.textContent = m; errBox.classList.remove('hidden'); };
 
   form.addEventListener('submit', async e => {
@@ -251,16 +654,24 @@
     errBox.classList.add('hidden');
     submitBtn.disabled = true; submitBtn.textContent = 'Надсилаємо…';
     try {
-      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, car: CAR_NAME }) });
+      const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, car: leadCtx }) });
       if (!res.ok) throw new Error();
       $('formView').classList.add('hidden'); $('doneView').classList.remove('hidden');
-      form.reset(); setTimeout(closeModal, 2500);
+      form.reset(); setTimeout(closeLead, 2500);
     } catch (_) {
       showError('Не вдалося надіслати заявку. Спробуйте ще раз або напишіть у Telegram.');
     } finally {
       submitBtn.disabled = false; submitBtn.textContent = 'Надіслати заявку';
     }
   });
+
+  // ===== Старт =====
+  $('total').textContent = CARS.length + ' авто в каталозі';
+  const fromURL = readURL();
+  syncInputs();
+  if (actives().some(a => a.k !== 'q')) { $('panel').classList.add('open'); $('filterBtn').setAttribute('aria-expanded', 'true'); }
+  render();
+  if (fromURL) openCar(fromURL);
 </script>
 </body>
 </html>
