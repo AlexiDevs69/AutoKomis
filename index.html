@@ -27,148 +27,246 @@
   .no-scrollbar { scrollbar-width: none; }
   input[type=search]::-webkit-search-cancel-button { display: none; }
   select { -webkit-appearance: none; appearance: none; }
-  #panel.open { display: grid; }
+
+  /* Шторка фільтрів: до 1024px — знизу, на ПК — бокова панель */
+  .d-actions { padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+  @media (min-width: 768px) { .d-actions { padding-bottom: 0; } }
+  @media (max-width: 1023px) {
+    #sheet { display: none; position: fixed; inset: 0; z-index: 50; }
+    #sheet.open { display: block; }
+    .sheet-overlay { position: absolute; inset: 0; background: rgba(14,14,16,.5); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+    .sheet-body { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; max-height: 88dvh; background: #fff; border-radius: 28px 28px 0 0; box-shadow: 0 -12px 40px rgba(0,0,0,.18); animation: sheetUp .3s cubic-bezier(.2,.7,.2,1); }
+  }
+  @media (min-width: 1024px) { .sheet-overlay { display: none; } }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
 
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   .rise { animation: rise .8s cubic-bezier(.2,.7,.2,1) both; }
   .rise-2 { animation-delay: .1s; } .rise-3 { animation-delay: .2s; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .rise, .sheet-body { animation: none; } }
 </style>
 </head>
-<body class="overflow-x-clip bg-white text-ink font-sans antialiased pb-28 md:pb-0">
+<body class="overflow-x-clip bg-white text-ink font-sans antialiased">
 
+<!-- ===== ШАПКА ===== -->
 <header class="sticky top-0 z-30 bg-white/85 backdrop-blur border-b border-ink/10">
-  <div class="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
-    <a href="./" class="flex items-center gap-3" aria-label="Auto Komis">
-      <img src="img/logo.png" alt="" class="w-10 h-10 rounded-full ring-1 ring-ink/15" width="40" height="40">
+  <div class="max-w-7xl mx-auto flex items-center justify-between gap-4 px-5 md:px-8 h-14 md:h-16">
+    <a href="./" class="flex items-center gap-2.5" aria-label="Auto Komis">
+      <img src="img/logo.png" alt="" class="w-9 h-9 md:w-10 md:h-10 rounded-full ring-1 ring-ink/15" width="40" height="40">
       <span class="font-display font-medium text-[15px]">Auto Komis</span>
     </a>
-    <a href="tel:+380000000000" class="text-sm font-semibold border border-ink/15 hover:border-ink rounded-full px-4 py-2 transition">Подзвонити</a>
+    <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-ink/60" aria-label="Розділи">
+      <a href="#catalog" class="hover:text-ink transition">Каталог</a>
+      <a href="#how" class="hover:text-ink transition">Як ми працюємо</a>
+      <a href="#contacts" class="hover:text-ink transition">Контакти</a>
+    </nav>
+    <a href="tel:+380000000000" class="inline-flex items-center gap-2 text-sm font-semibold border border-ink/15 hover:border-ink rounded-full pl-3.5 pr-4 py-2 transition">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Подзвонити
+    </a>
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-5">
+<main>
 
-  <section class="relative pt-16 pb-14 md:pt-24 md:pb-20">
-    <div class="hidden md:block absolute right-[-120px] top-10 w-[520px] h-[520px] pointer-events-none" aria-hidden="true">
-      <div class="arc absolute inset-0"></div>
-      <div class="arc absolute inset-[70px]"></div>
-      <div class="arc arc-gold absolute inset-[70px] -rotate-45"></div>
-    </div>
-    <h1 class="rise relative font-display font-medium text-[34px] md:text-[64px] leading-[1.05] tracking-[-0.03em] max-w-[14ch]">Авто в наявності та під замовлення</h1>
-    <p class="rise rise-2 relative mt-6 md:mt-8 text-[17px] md:text-xl leading-snug text-ink/60 max-w-[32ch]">Привозимо з Європи та США. Перевіряємо історію і рахуємо ціну до гривні.</p>
-    <div class="rise rise-3 relative mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
-      <button id="openHero" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити підбір</button>
-      <a href="#catalog" class="font-semibold border-b-2 border-gold pb-0.5">Дивитись каталог</a>
+  <!-- ===== ГОЛОВНИЙ ЕКРАН ===== -->
+  <section id="hero" class="relative overflow-hidden bg-soft rounded-b-[32px] md:rounded-b-[56px]">
+    <div class="relative max-w-7xl mx-auto px-5 md:px-8 pt-10 pb-12 md:pt-24 md:pb-24">
+      <div class="absolute right-[-150px] top-4 w-[320px] h-[320px] md:right-[-120px] md:top-10 md:w-[520px] md:h-[520px] pointer-events-none" aria-hidden="true">
+        <div class="arc absolute inset-0"></div>
+        <div class="arc absolute inset-[44px] md:inset-[70px]"></div>
+        <div class="arc arc-gold absolute inset-[44px] md:inset-[70px] -rotate-45"></div>
+      </div>
+      <p class="rise relative inline-flex items-center gap-2 text-xs font-semibold bg-white rounded-full px-3.5 py-1.5 mb-5 md:mb-7">
+        <i class="w-1.5 h-1.5 rounded-full bg-gold"></i>Авто з Європи та США
+      </p>
+      <h1 class="rise rise-2 relative font-display font-medium text-[34px] md:text-[64px] leading-[1.05] tracking-[-0.03em] max-w-[14ch]">Авто в наявності та під замовлення</h1>
+      <p class="rise rise-2 relative mt-5 md:mt-8 text-[17px] md:text-xl leading-snug text-ink/60 max-w-[32ch]">Привозимо з Європи та США. Перевіряємо історію і рахуємо ціну до гривні.</p>
+      <div class="rise rise-3 relative mt-8 md:mt-10 flex flex-col sm:flex-row sm:items-center gap-3">
+        <button id="openHero" class="w-full sm:w-auto bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-7 py-4 transition">Замовити підбір</button>
+        <a href="#catalog" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border border-ink/10 hover:border-ink font-semibold rounded-full px-7 py-4 transition">
+          Дивитись каталог
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+        </a>
+      </div>
     </div>
   </section>
 
   <!-- ===== КАТАЛОГ ===== -->
-  <section id="catalog" class="scroll-mt-20">
-    <div class="flex items-baseline justify-between border-t border-ink/10 pt-5 mb-5">
-      <h2 class="font-display font-medium text-lg">Каталог</h2>
-      <span id="total" class="text-sm text-ink/45"></span>
-    </div>
-
-    <!-- Пошук (липкий) -->
-    <div class="sticky top-16 z-20 -mx-5 px-5 py-3 bg-white/90 backdrop-blur">
-      <div class="flex gap-2">
-        <div class="relative flex-1">
-          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Пошук авто"
-                 placeholder="Марка, модель або рік, наприклад: ягуар"
-                 class="w-full h-12 bg-soft rounded-full pl-12 pr-12 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
-          <button id="qClear" type="button" aria-label="Очистити пошук" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 place-items-center rounded-full hover:bg-ink/10">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        <button id="filterBtn" type="button" aria-expanded="false" aria-controls="panel" class="md:hidden relative h-12 px-4 inline-flex items-center gap-2 rounded-full border border-ink/15 font-semibold text-sm">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-          Фільтри
-          <span id="filterBadge" class="hidden min-w-5 h-5 px-1.5 rounded-full bg-gold text-ink text-xs font-bold items-center justify-center"></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Марки -->
-    <div id="brandChips" class="mt-1 -mx-5 px-5 flex gap-2 overflow-x-auto no-scrollbar pb-1" role="group" aria-label="Марка"></div>
-
-    <!-- Фільтри -->
-    <div id="panel" class="hidden md:grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-6 pt-5 pb-6">
+  <section id="catalog" class="scroll-mt-14 md:scroll-mt-16 max-w-7xl mx-auto px-5 md:px-8 pt-14 pb-16 md:pt-24 md:pb-28">
+    <div class="flex items-end justify-between gap-4 mb-6 md:mb-10">
       <div>
-        <p class="text-sm font-semibold mb-2.5">Ціна, zł</p>
-        <div class="grid grid-cols-2 gap-2">
-          <input id="pmin" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна від" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
-          <input id="pmax" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна до" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
-        </div>
-        <div id="priceQuick" class="mt-2.5 flex flex-wrap gap-2"></div>
+        <p class="flex items-center gap-2 text-xs font-semibold tracking-[.14em] uppercase text-ink/45"><span class="w-5 h-[2px] bg-gold"></span>Наші авто</p>
+        <h2 class="mt-3 font-display font-medium text-[28px] md:text-4xl tracking-tight leading-none">Каталог</h2>
       </div>
-      <div>
-        <p class="text-sm font-semibold mb-2.5">Рік випуску</p>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="relative"><select id="ymin" aria-label="Рік від" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-          <div class="relative"><select id="ymax" aria-label="Рік до" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-        </div>
-        <p class="text-sm font-semibold mt-5 mb-2.5">Пробіг</p>
-        <div class="relative"><select id="kmax" aria-label="Максимальний пробіг" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
-      </div>
-      <div class="space-y-5">
-        <div><p class="text-sm font-semibold mb-2.5">Паливо</p><div id="fuelChips" class="flex flex-wrap gap-2"></div></div>
-        <div><p class="text-sm font-semibold mb-2.5">Коробка</p><div id="gearChips" class="flex flex-wrap gap-2"></div></div>
-        <div><p class="text-sm font-semibold mb-2.5">Статус</p><div id="statusChips" class="flex flex-wrap gap-2"></div></div>
-      </div>
+      <span id="total" class="text-sm text-ink/45 pb-0.5 text-right"></span>
     </div>
 
-    <!-- Застосовані фільтри + результат -->
-    <div class="mt-4 border-t border-ink/10 pt-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <p id="count" class="font-semibold" aria-live="polite"></p>
-        <div class="flex items-center gap-2">
-          <div class="relative">
-            <select id="sort" aria-label="Сортування" class="h-10 bg-soft rounded-full pl-4 pr-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ink">
-              <option value="rel">За релевантністю</option>
-              <option value="name">Назва А → Я</option>
-              <option value="name-desc">Назва Я → А</option>
-              <option value="price-asc">Спочатку дешевші</option>
-              <option value="price-desc">Спочатку дорожчі</option>
-              <option value="year-desc">Спочатку новіші</option>
-              <option value="year-asc">Спочатку старіші</option>
-              <option value="km-asc">Менший пробіг</option>
-            </select>
-            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-          </div>
-          <div class="hidden sm:flex rounded-full bg-soft p-1" role="group" aria-label="Вигляд">
-            <button id="viewGrid" type="button" aria-label="Плитка" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
-            <button id="viewList" type="button" aria-label="Список" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-10 lg:items-start">
+
+      <!-- Фільтри: на телефоні/планшеті — шторка знизу, на ПК — бокова панель -->
+      <aside class="lg:sticky lg:top-24" aria-label="Фільтри">
+        <div id="sheet">
+          <div id="sheetOverlay" class="sheet-overlay"></div>
+          <div class="sheet-body lg:bg-white lg:border lg:border-ink/10 lg:rounded-3xl lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto no-scrollbar">
+
+            <div class="lg:hidden shrink-0 pt-3 px-5 pb-3 border-b border-ink/10">
+              <div class="mx-auto w-10 h-1 rounded-full bg-ink/15 mb-3"></div>
+              <div class="flex items-center justify-between">
+                <h3 class="font-display font-medium text-lg">Фільтри</h3>
+                <button id="sheetClose" type="button" aria-label="Закрити" class="w-9 h-9 grid place-items-center rounded-full bg-soft hover:bg-ink/10">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="hidden lg:flex items-center justify-between px-5 pt-5 pb-4 border-b border-ink/10">
+              <h3 class="font-display font-medium text-base">Фільтри</h3>
+              <button type="button" data-reset class="text-sm font-semibold underline decoration-gold decoration-2 underline-offset-4">Скинути</button>
+            </div>
+
+            <div id="panel" class="flex-1 overflow-y-auto lg:overflow-visible px-5 divide-y divide-ink/10">
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Статус</p>
+                <div id="statusChips" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Паливо</p>
+                <div id="fuelChips" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Коробка</p>
+                <div id="gearChips" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Ціна, zł</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <input id="pmin" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна від" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+                  <input id="pmax" type="text" inputmode="numeric" autocomplete="off" aria-label="Ціна до" class="w-full h-12 bg-soft rounded-2xl px-4 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+                </div>
+                <div id="priceQuick" class="mt-3 flex flex-wrap gap-2"></div>
+              </div>
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Рік випуску</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="relative"><select id="ymin" aria-label="Рік від" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="relative"><select id="ymax" aria-label="Рік до" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+                </div>
+              </div>
+              <div class="py-5">
+                <p class="text-sm font-semibold mb-3">Пробіг</p>
+                <div class="relative"><select id="kmax" aria-label="Максимальний пробіг" class="w-full h-12 bg-soft rounded-2xl pl-4 pr-9 text-base focus:outline-none focus:ring-2 focus:ring-ink"></select><svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+              </div>
+            </div>
+
+            <div class="lg:hidden shrink-0 border-t border-ink/10 bg-white p-4 grid grid-cols-[auto_1fr] gap-3" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));">
+              <button type="button" data-reset class="h-12 px-5 rounded-full border border-ink/15 font-semibold">Скинути</button>
+              <button id="sheetApply" type="button" class="h-12 rounded-full bg-ink text-white font-semibold">Показати авто</button>
+            </div>
           </div>
         </div>
+      </aside>
+
+      <!-- Пошук + результати -->
+      <div class="min-w-0">
+        <div class="sticky top-14 md:top-16 z-20 -mx-5 px-5 md:-mx-8 md:px-8 lg:mx-0 lg:px-0 py-3 bg-white/90 backdrop-blur">
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="q" type="search" autocomplete="off" enterkeyhint="search" aria-label="Пошук авто"
+                     placeholder="Марка, модель або рік, наприклад: ягуар"
+                     class="w-full h-12 bg-soft rounded-full pl-12 pr-12 text-base placeholder-ink/40 focus:outline-none focus:ring-2 focus:ring-ink">
+              <button id="qClear" type="button" aria-label="Очистити пошук" class="hidden absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 place-items-center rounded-full hover:bg-ink/10">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            </div>
+            <button id="filterBtn" type="button" aria-expanded="false" aria-controls="sheet" class="lg:hidden relative h-12 px-4 inline-flex items-center gap-2 rounded-full border border-ink/15 bg-white font-semibold text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              <span class="hidden min-[400px]:inline">Фільтри</span>
+              <span id="filterBadge" class="hidden min-w-5 h-5 px-1.5 rounded-full bg-gold text-ink text-xs font-bold items-center justify-center"></span>
+            </button>
+          </div>
+        </div>
+
+        <div id="brandChips" class="mt-1 -mx-5 px-5 md:-mx-8 md:px-8 lg:mx-0 lg:px-0 flex gap-2 overflow-x-auto no-scrollbar pb-1" role="group" aria-label="Марка"></div>
+
+        <div class="mt-5 flex items-center justify-between gap-3">
+          <p id="count" class="font-semibold text-[15px]" aria-live="polite"></p>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <select id="sort" aria-label="Сортування" class="h-10 bg-soft rounded-full pl-4 pr-9 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ink">
+                <option value="rel">За релевантністю</option>
+                <option value="name">Назва А → Я</option>
+                <option value="name-desc">Назва Я → А</option>
+                <option value="price-asc">Спочатку дешевші</option>
+                <option value="price-desc">Спочатку дорожчі</option>
+                <option value="year-desc">Спочатку новіші</option>
+                <option value="year-asc">Спочатку старіші</option>
+                <option value="km-asc">Менший пробіг</option>
+              </select>
+              <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/50" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="hidden sm:flex rounded-full bg-soft p-1" role="group" aria-label="Вигляд">
+              <button id="viewGrid" type="button" aria-label="Плитка" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></button>
+              <button id="viewList" type="button" aria-label="Список" class="w-8 h-8 grid place-items-center rounded-full"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div id="active" class="mt-3 flex flex-wrap gap-2"></div>
+
+        <div id="results" class="mt-5"></div>
       </div>
-      <div id="active" class="mt-3 flex flex-wrap gap-2"></div>
     </div>
-
-    <div id="results" class="mt-6"></div>
   </section>
 
-  <section class="mt-28 md:mt-40">
-    <h2 class="font-display font-medium text-2xl md:text-3xl tracking-tight">Як ми привозимо авто</h2>
-    <ol class="mt-12 grid md:grid-cols-3 gap-12 md:gap-10">
-      <li class="border-t-2 border-ink pt-5"><span class="text-sm text-ink/45 tabular-nums">1</span>
-        <h3 class="mt-3 font-semibold text-lg">Підбираємо</h3><p class="mt-2 text-ink/60 leading-relaxed">Ви кажете бюджет і що важливо, ми шукаємо варіанти в Європі та США.</p></li>
-      <li class="border-t-2 border-ink pt-5"><span class="text-sm text-ink/45 tabular-nums">2</span>
-        <h3 class="mt-3 font-semibold text-lg">Перевіряємо до оплати</h3><p class="mt-2 text-ink/60 leading-relaxed">Історія, реальний пробіг і стан кузова. Показуємо фото й відео.</p></li>
-      <li class="border-t-2 border-gold pt-5"><span class="text-sm text-ink/45 tabular-nums">3</span>
-        <h3 class="mt-3 font-semibold text-lg">Привозимо й оформлюємо</h3><p class="mt-2 text-ink/60 leading-relaxed">Доставка, розмитнення, реєстрація. Ви забираєте авто з документами.</p></li>
-    </ol>
+  <!-- ===== ЯК ПРАЦЮЄМО ===== -->
+  <section id="how" class="scroll-mt-14 md:scroll-mt-16 bg-ink text-white">
+    <div class="max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-28">
+      <p class="flex items-center gap-2 text-xs font-semibold tracking-[.14em] uppercase text-white/45"><span class="w-5 h-[2px] bg-gold"></span>Під замовлення</p>
+      <h2 class="mt-3 font-display font-medium text-[28px] md:text-4xl tracking-tight leading-tight max-w-[18ch]">Як ми привозимо авто</h2>
+      <ol class="mt-8 md:mt-14 grid gap-3 md:grid-cols-3 md:gap-5">
+        <li class="rounded-3xl bg-white/[.06] border border-white/10 p-6 md:p-8">
+          <span class="w-9 h-9 grid place-items-center rounded-full bg-white/10 text-sm font-semibold tabular-nums">1</span>
+          <h3 class="mt-5 font-semibold text-lg">Підбираємо</h3>
+          <p class="mt-2 text-white/60 leading-relaxed">Ви кажете бюджет і що важливо, ми шукаємо варіанти в Європі та США.</p>
+        </li>
+        <li class="rounded-3xl bg-white/[.06] border border-white/10 p-6 md:p-8">
+          <span class="w-9 h-9 grid place-items-center rounded-full bg-white/10 text-sm font-semibold tabular-nums">2</span>
+          <h3 class="mt-5 font-semibold text-lg">Перевіряємо до оплати</h3>
+          <p class="mt-2 text-white/60 leading-relaxed">Історія, реальний пробіг і стан кузова. Показуємо фото й відео.</p>
+        </li>
+        <li class="rounded-3xl bg-white/[.06] border border-gold/40 p-6 md:p-8">
+          <span class="w-9 h-9 grid place-items-center rounded-full bg-gold text-ink text-sm font-bold tabular-nums">3</span>
+          <h3 class="mt-5 font-semibold text-lg">Привозимо й оформлюємо</h3>
+          <p class="mt-2 text-white/60 leading-relaxed">Доставка, розмитнення, реєстрація. Ви забираєте авто з документами.</p>
+        </li>
+      </ol>
+      <button id="openHow" type="button" class="mt-8 md:mt-12 w-full sm:w-auto bg-white hover:bg-white/90 text-ink font-semibold rounded-full px-8 py-4 transition">Замовити підбір</button>
+    </div>
   </section>
-
-  <footer class="mt-24 py-8 border-t border-ink/10 text-sm text-ink/45">© Auto Komis</footer>
 </main>
 
-<!-- Нижня панель (телефон) -->
-<div class="fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur border-t border-ink/10 md:hidden" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
-  <div class="grid grid-cols-5 gap-2 p-3">
-    <button id="openBar" class="col-span-3 bg-ink active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] transition">Замовити огляд / Дзвінок</button>
-    <a id="tgBar" href="#" target="_blank" rel="noopener" class="col-span-2 border border-ink/20 active:scale-[.98] font-semibold rounded-full py-3.5 text-[15px] text-center transition">Telegram</a>
+<!-- ===== ПІДВАЛ ===== -->
+<footer id="contacts" class="scroll-mt-14 md:scroll-mt-16 bg-ink text-white border-t border-white/10 pt-12 md:pt-16 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] md:pb-10">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+      <a href="./" class="flex items-center gap-3" aria-label="Auto Komis">
+        <img src="img/logo.png" alt="" class="w-11 h-11 rounded-full ring-1 ring-white/20" width="44" height="44">
+        <span class="font-display font-medium">Auto Komis</span>
+      </a>
+      <div class="grid gap-3 sm:flex">
+        <a href="tel:+380000000000" class="bg-white text-ink font-semibold rounded-full px-7 py-3.5 text-center">Подзвонити</a>
+        <a id="tgFoot" href="#" target="_blank" rel="noopener" class="border border-white/25 hover:border-white font-semibold rounded-full px-7 py-3.5 text-center transition">Telegram</a>
+      </div>
+    </div>
+    <p class="mt-10 pt-6 border-t border-white/10 text-sm text-white/40">© Auto Komis</p>
+  </div>
+</footer>
+
+<!-- Нижня панель (телефон): з'являється, коли головна кнопка вже проскролена -->
+<div id="bar" inert class="fixed bottom-0 inset-x-0 z-30 bg-white/90 backdrop-blur border-t border-ink/10 md:hidden translate-y-full transition-transform duration-300" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
+  <div class="flex gap-2 p-3">
+    <button id="openBar" class="flex-1 bg-ink active:scale-[.98] text-white font-semibold rounded-full py-3.5 text-[15px] transition">Залишити заявку</button>
+    <a id="tgBar" href="#" target="_blank" rel="noopener" class="px-6 border border-ink/20 active:scale-[.98] font-semibold rounded-full py-3.5 text-[15px] text-center transition">Telegram</a>
   </div>
 </div>
 
@@ -181,7 +279,7 @@
     </button>
     <div class="md:grid md:grid-cols-2">
       <div class="relative bg-soft md:self-start">
-        <div id="dSlides" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar aspect-[4/5]"></div>
+        <div id="dSlides" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar aspect-[4/3] md:aspect-[4/5]"></div>
         <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/45 to-transparent pointer-events-none"></div>
         <div id="dBars" class="absolute top-3 inset-x-4 right-16 flex gap-1.5 pointer-events-none"></div>
         <span id="dBadge"></span>
@@ -191,14 +289,15 @@
           <button id="dNext" aria-label="Наступне фото" class="w-10 h-10 grid place-items-center rounded-full bg-white/95 hover:bg-white shadow"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
       </div>
-      <div class="p-6 md:p-10 flex flex-col" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));">
-        <h3 id="dName" class="font-display font-medium text-[26px] md:text-3xl leading-tight tracking-tight"></h3>
+      <div class="px-5 pt-5 md:p-10 flex flex-col">
+        <h3 id="dName" class="font-display font-medium text-[24px] md:text-3xl leading-tight tracking-tight"></h3>
         <p id="dSub" class="mt-1.5 text-ink/55"></p>
-        <p id="dPrice" class="mt-6 font-display font-medium text-[34px] md:text-4xl leading-none tracking-tight"></p>
-        <dl id="dSpecs" class="mt-6"></dl>
-        <div class="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
-          <button id="dLead" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-6 py-4 transition">Замовити огляд</button>
-          <a id="dTg" href="#" target="_blank" rel="noopener" class="border border-ink/15 hover:border-ink font-semibold rounded-full px-6 py-4 text-center transition">Telegram</a>
+        <p id="dPrice" class="mt-5 font-display font-medium text-[32px] md:text-4xl leading-none tracking-tight"></p>
+        <dl id="dSpecs" class="mt-4 md:mt-6"></dl>
+        <!-- кнопки липнуть до низу шторки на телефоні -->
+        <div class="d-actions mt-4 md:mt-8 sticky bottom-0 -mx-5 px-5 pt-3 bg-white/95 backdrop-blur border-t border-ink/10 md:static md:mx-0 md:px-0 md:pt-0 md:bg-transparent md:backdrop-blur-none md:border-0 grid grid-cols-[1.4fr_1fr] gap-2.5 md:grid-cols-1 lg:grid-cols-2 md:gap-3">
+          <button id="dLead" class="bg-ink hover:bg-ink/85 text-white font-semibold rounded-full px-5 py-3.5 md:py-4 transition">Замовити огляд</button>
+          <a id="dTg" href="#" target="_blank" rel="noopener" class="border border-ink/15 hover:border-ink font-semibold rounded-full px-5 py-3.5 md:py-4 text-center transition">Telegram</a>
         </div>
       </div>
     </div>
@@ -433,7 +532,7 @@
 
   // ===== Відображення =====
   const chip = (attr, val, label, count, on) =>
-    `<button type="button" data-${attr}="${esc(val)}" aria-pressed="${on}" class="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-full border text-sm font-medium transition ${on ? 'bg-ink text-white border-ink' : 'border-ink/15 hover:border-ink'} ${!on && count === 0 ? 'opacity-40' : ''}">${esc(label)}${count != null ? `<span class="text-xs tabular-nums ${on ? 'text-white/60' : 'text-ink/45'}">${count}</span>` : ''}</button>`;
+    `<button type="button" data-${attr}="${esc(val)}" aria-pressed="${on}" class="shrink-0 inline-flex items-center gap-2 h-10 lg:h-9 px-4 rounded-full border text-sm font-medium transition ${on ? 'bg-ink text-white border-ink' : 'border-ink/15 hover:border-ink'} ${!on && count === 0 ? 'opacity-40' : ''}">${esc(label)}${count != null ? `<span class="text-xs tabular-nums ${on ? 'text-white/60' : 'text-ink/45'}">${count}</span>` : ''}</button>`;
 
   function badge(c, pos) {
     const base = `${pos} inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full `;
@@ -445,21 +544,27 @@
   function card(c) {
     const sold = c.status === 'sold', list = S.view === 'list';
     const photos = photosOf(c);
-    return `<article>
-      <a href="?car=${esc(c.id)}" data-open="${esc(c.id)}" class="group block ${list ? 'sm:flex sm:gap-7 sm:items-center' : ''} rounded-3xl">
-        <div class="relative aspect-[4/3] overflow-hidden rounded-3xl bg-soft ${list ? 'sm:w-[42%] sm:shrink-0' : ''}">
-          ${imgTag(c, photos[0], 'w-full h-full object-cover ' + (sold ? 'grayscale opacity-60' : ''), 'loading="lazy"')}
+    const tag = 'px-2.5 py-1 rounded-full bg-soft text-xs font-medium text-ink/70';
+    return `<article class="rounded-3xl border border-ink/10 bg-white overflow-hidden transition hover:border-ink/25 hover:shadow-[0_16px_36px_-16px_rgba(14,14,16,.3)]">
+      <a href="?car=${esc(c.id)}" data-open="${esc(c.id)}" class="group flex flex-col h-full ${list ? 'sm:flex-row' : ''}">
+        <div class="relative aspect-[16/10] sm:aspect-[4/3] overflow-hidden bg-soft ${list ? 'sm:w-[42%] sm:shrink-0' : ''}">
+          ${imgTag(c, photos[0], 'w-full h-full object-cover transition duration-500 group-hover:scale-[1.03] ' + (sold ? 'grayscale opacity-60' : ''), 'loading="lazy"')}
           ${badge(c, 'absolute bottom-3 left-3')}
           ${photos.length > 1 ? `<span class="absolute bottom-3 right-3 text-xs font-semibold text-white bg-ink/60 backdrop-blur px-2.5 py-1.5 rounded-full">${photos.length} фото</span>` : ''}
         </div>
-        <div class="mt-4 ${list ? 'sm:mt-0 sm:flex-1' : ''} ${sold ? 'opacity-55' : ''}">
-          <h3 class="font-semibold text-lg leading-snug group-hover:underline decoration-gold decoration-2 underline-offset-4">${esc(nameOf(c))}</h3>
+        <div class="flex-1 flex flex-col p-4 md:p-5 ${sold ? 'opacity-55' : ''}">
+          <h3 class="font-semibold text-[17px] md:text-lg leading-snug group-hover:underline decoration-gold decoration-2 underline-offset-4">${esc(nameOf(c))}</h3>
           <p class="text-sm text-ink/55 mt-0.5">${esc(c.sub)}</p>
-          <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink/70">
-            <li>${c.year}</li><li>${fmt(c.km)}&nbsp;км</li><li>${esc(c.fuel)}</li><li>${esc(c.gearbox)}${c.awd ? ', 4x4' : ''}</li>
+          <ul class="mt-3 flex flex-wrap gap-1.5">
+            <li class="${tag}">${c.year}</li><li class="${tag}">${fmt(c.km)}&nbsp;км</li><li class="${tag}">${esc(c.fuel)}</li><li class="${tag}">${esc(c.gearbox)}${c.awd ? ', 4x4' : ''}</li>
           </ul>
           ${c.status === 'transit' ? `<div class="mt-3 h-[3px] rounded-full bg-ink/10 max-w-[220px]"><div class="h-full rounded-full bg-gold" style="width:${+c.progress || 0}%"></div></div>` : ''}
-          <p class="mt-4 font-display font-medium text-2xl tracking-tight ${sold ? 'line-through decoration-ink/40' : ''}">${money(c.price)}</p>
+          <div class="mt-auto pt-4">
+            <div class="mt-0 pt-4 border-t border-ink/10 flex items-center justify-between gap-3">
+              <p class="font-display font-medium text-[22px] md:text-2xl tracking-tight ${sold ? 'line-through decoration-ink/40' : ''}">${money(c.price)}</p>
+              <span class="shrink-0 w-10 h-10 grid place-items-center rounded-full bg-soft transition group-hover:bg-ink group-hover:text-white" aria-hidden="true"><svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </div>
+          </div>
         </div>
       </a>
     </article>`;
@@ -521,7 +626,8 @@
     $('qClear').classList.toggle('hidden', !S.q); $('qClear').classList.toggle('grid', !!S.q);
 
     const res = $('results');
-    res.className = 'mt-6 ' + (list.length && S.view === 'grid' ? 'grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3' : list.length ? 'grid gap-8' : '');
+    res.className = 'mt-5 ' + (list.length && S.view === 'grid' ? 'grid gap-4 sm:grid-cols-2 sm:gap-5' : list.length ? 'grid gap-4 sm:gap-5' : '');
+    $('sheetApply').textContent = list.length ? `Показати ${list.length} авто` : 'Нічого не знайдено';
     res.innerHTML = list.length ? list.map(card).join('') : emptyHTML();
 
     const on = 'bg-white shadow-sm', off = 'text-ink/50';
@@ -576,7 +682,11 @@
   $('sort').addEventListener('change', e => { S.sort = e.target.value; S.sortSet = true; render(); });
   $('viewGrid').onclick = () => { S.view = 'grid'; render(); };
   $('viewList').onclick = () => { S.view = 'list'; render(); };
-  $('filterBtn').onclick = () => { const o = $('panel').classList.toggle('open'); $('filterBtn').setAttribute('aria-expanded', o); };
+  const sheet = $('sheet');
+  const setSheet = o => { sheet.classList.toggle('open', o); $('filterBtn').setAttribute('aria-expanded', o); lockScroll(); };
+  $('filterBtn').onclick = () => setSheet(true);
+  $('sheetClose').onclick = $('sheetOverlay').onclick = $('sheetApply').onclick = () => setSheet(false);
+  matchMedia('(min-width: 1024px)').addEventListener('change', e => { if (e.matches) setSheet(false); });
 
   let lastFocus = null;
   document.addEventListener('click', e => {
@@ -617,7 +727,7 @@
     if (!c) return;
     curCar = c;
     const photos = photosOf(c); dLen = photos.length; dIdx = 0;
-    dSlides.innerHTML = photos.map((src, i) => `<div class="min-w-full snap-center aspect-[4/5]">${imgTag(c, src, 'w-full h-full object-cover ' + (c.status === 'sold' ? 'grayscale opacity-70' : ''), i ? 'loading="lazy"' : '')}</div>`).join('');
+    dSlides.innerHTML = photos.map((src, i) => `<div class="min-w-full snap-center">${imgTag(c, src, 'w-full h-full object-cover ' + (c.status === 'sold' ? 'grayscale opacity-70' : ''), i ? 'loading="lazy"' : '')}</div>`).join('');
     dSlides.scrollLeft = 0;
     dBars.innerHTML = photos.map(() => '<i></i>').join('');
     dBars.classList.toggle('hidden', dLen < 2);
@@ -651,7 +761,7 @@
 
   // ===== Заявка =====
   const modal = $('modal'), form = $('leadForm'), errBox = $('formError'), submitBtn = $('submitBtn');
-  const modalOpen = () => !modal.classList.contains('hidden') || !$('detail').classList.contains('hidden');
+  const modalOpen = () => !modal.classList.contains('hidden') || !$('detail').classList.contains('hidden') || $('sheet').classList.contains('open');
   const lockScroll = () => { document.body.style.overflow = modalOpen() ? 'hidden' : ''; };
 
   function searchSummary() {
@@ -667,13 +777,18 @@
   }
   function closeLead() { modal.classList.replace('flex', 'hidden'); lockScroll(); }
   $('openHero').onclick = () => openLead('Підбір під замовлення');
+  $('openHow').onclick = () => openLead('Підбір під замовлення');
+  $('tgFoot').href = tgUrl('Привіт! Хочу підібрати авто');
+  // нижня панель на телефоні з'являється, коли головна кнопка вже поза екраном
+  const bar = $('bar');
+  new IntersectionObserver(([e]) => { const show = !e.isIntersecting && e.boundingClientRect.top < 0; bar.classList.toggle('translate-y-full', !show); bar.inert = !show; }).observe($('openHero'));
   $('openBar').onclick = () => openLead(curCar ? null : searchSummary());
   $('closeModal').onclick = closeLead;
   $('overlay').onclick = closeLead;
 
   document.addEventListener('keydown', e => {
     const leadOpen = !modal.classList.contains('hidden');
-    if (e.key === 'Escape') { leadOpen ? closeLead() : closeDetail(); }
+    if (e.key === 'Escape') { if (sheet.classList.contains('open')) setSheet(false); else leadOpen ? closeLead() : closeDetail(); }
     else if (curCar && !leadOpen && dLen > 1 && e.key === 'ArrowLeft') dGo(dIdx - 1);
     else if (curCar && !leadOpen && dLen > 1 && e.key === 'ArrowRight') dGo(dIdx + 1);
   });
@@ -719,7 +834,6 @@
     $('total').textContent = CARS.length + ' авто в каталозі';
     const fromURL = readURL();
     syncInputs();
-    if (actives().some(a => a.k !== 'q')) { $('panel').classList.add('open'); $('filterBtn').setAttribute('aria-expanded', 'true'); }
     started = true; render();
     if (fromURL) openCar(fromURL);
     setInterval(loadCars, 15000);
