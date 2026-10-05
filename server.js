@@ -1,8 +1,10 @@
-// Запуск: BOT_TOKEN=... CHAT_ID=... ADMIN_IDS=123,456 node server.js   (Node 18+, без залежностей)
-// Сайт, API каталогу і Telegram-бот працюють в одному процесі й діляться одним cars.json — тому все синхронно.
+// Запуск: BOT_TOKEN=... CHAT_ID=... ADMIN_IDS=123,456 CLOUDINARY_URL=cloudinary://KEY:SECRET@CLOUD node server.js   (Node 18+, без залежностей)
+// Сайт, API каталогу і Telegram-бот працюють в одному процесі.
+// Каталог (cars.json) і фото зберігаються в Cloudinary, тому не пропадають при рестарті/редеплої Render.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const { BOT_TOKEN, CHAT_ID, ADMIN_IDS = '', PORT = 3000 } = process.env;
 const ROOT = __dirname, DB = path.join(ROOT, 'cars.json'), IMG = path.join(ROOT, 'img');
@@ -16,16 +18,77 @@ const TYPES = {
 process.on('uncaughtException', e => console.error('uncaught:', e));
 process.on('unhandledRejection', e => console.error('unhandled:', e));
 
+// ===== Cloudinary (без SDK) =====
+// CLOUDINARY_URL береться з Dashboard → API Keys: cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+const CLD = (() => {
+  const m = (process.env.CLOUDINARY_URL || '').match(/^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/);
+  return m ? { key: m[1], secret: m[2], cloud: m[3] } : null;
+})();
+const CLD_DIR = 'autokomis', CLD_DB = CLD_DIR + '/cars.json';
+
+const cldSign = p => crypto.createHash('sha1')
+  .update(Object.keys(p).sort().map(k => `${k}=${p[k]}`).join('&') + CLD.secret).digest('hex');
+
+async function cldUpload(buf, publicId, type = 'image') {
+  const p = { invalidate: 'true', overwrite: 'true', public_id: publicId, timestamp: String(Math.floor(Date.now() / 1000)) };
+  const f = new FormData();
+  f.append('file', new Blob([buf]), publicId.split('/').pop());
+  for (const k in p) f.append(k, p[k]);
+  f.append('api_key', CLD.key);
+  f.append('signature', cldSign(p));
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLD.cloud}/${type}/upload`, { method: 'POST', body: f }).then(r => r.json());
+  if (!r.secure_url) throw new Error('cloudinary upload: ' + JSON.stringify(r));
+  return r.secure_url;
+}
+
+async function cldDestroy(publicId) {
+  const p = { invalidate: 'true', public_id: publicId, timestamp: String(Math.floor(Date.now() / 1000)) };
+  const body = new URLSearchParams({ ...p, api_key: CLD.key, signature: cldSign(p) });
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLD.cloud}/image/destroy`, { method: 'POST', body }).then(r => r.json());
+  if (!['ok', 'not found'].includes(r.result)) throw new Error('cloudinary destroy: ' + JSON.stringify(r));
+}
+
 // ===== Сховище каталогу =====
 let cars = [];
-try { cars = JSON.parse(fs.readFileSync(DB, 'utf8')); } catch { cars = []; }
-function save() {
-  fs.writeFileSync(DB + '.tmp', JSON.stringify(cars, null, 1));
-  fs.renameSync(DB + '.tmp', DB);   // атомарно, щоб файл не побився при збої
+
+async function loadCars() {
+  const local = () => { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch { return []; } };
+  if (!CLD) { console.warn('CLOUDINARY_URL не задано — дані зберігаються локально і зникнуть при рестарті на Render!'); cars = local(); return; }
+
+  const auth = 'Basic ' + Buffer.from(`${CLD.key}:${CLD.secret}`).toString('base64');
+  const r = await fetch(`https://api.cloudinary.com/v1_1/${CLD.cloud}/resources/raw/upload/${CLD_DB}`, { headers: { Authorization: auth } });
+  if (r.status === 404) {            // перший запуск: каталогу в хмарі ще нема
+    cars = local();
+    await saveRemote();
+    return;
+  }
+  if (!r.ok) throw new Error('Не вдалося завантажити каталог з Cloudinary: ' + r.status + ' ' + await r.text());
+  const info = await r.json();
+  const data = await fetch(info.secure_url).then(x => { if (!x.ok) throw new Error('download ' + x.status); return x.json(); });
+  if (!Array.isArray(data)) throw new Error('Каталог у Cloudinary має неправильний формат');
+  cars = data;
 }
-const rmPhotos = c => (c.photos || [])
-  .filter(p => p.startsWith('img/' + c.id + '-'))   // видаляємо лише фото, завантажені ботом
-  .forEach(p => fs.rmSync(path.join(ROOT, p), { force: true }));
+
+const saveRemote = () => cldUpload(Buffer.from(JSON.stringify(cars, null, 1)), CLD_DB, 'raw');
+
+let saving = Promise.resolve();   // черга: збереження йдуть строго по одному, останній стан виграє
+function save() {
+  try {                            // локальна копія (запасна)
+    fs.writeFileSync(DB + '.tmp', JSON.stringify(cars, null, 1));
+    fs.renameSync(DB + '.tmp', DB);
+  } catch (e) { console.error('local save:', e.message); }
+  if (CLD) saving = saving.then(saveRemote).catch(e => console.error('Cloudinary save error:', e.message));
+  return saving;
+}
+
+const rmPhotos = c => (c.photos || []).forEach(p => {
+  if (CLD && p.includes(`/${CLD_DIR}/${c.id}-`)) {
+    const m = p.match(/\/(autokomis\/[^/.]+)\.\w+$/);
+    if (m) cldDestroy(m[1]).catch(e => console.error(e.message));
+  } else if (p.startsWith('img/' + c.id + '-')) {
+    fs.rmSync(path.join(ROOT, p), { force: true });
+  }
+});
 
 // ===== HTTP =====
 function send(res, code, body, type = 'application/json', extra = {}) {
@@ -72,7 +135,7 @@ async function handleLead(req, res) {
   }
 }
 
-http.createServer((req, res) => {
+const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
 
   if (url.pathname === '/api/cars' && req.method === 'GET') return send(res, 200, cars, 'application/json', { 'Cache-Control': 'no-store' });
@@ -81,14 +144,14 @@ http.createServer((req, res) => {
 
   let rel;
   try { rel = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\/+/, ''); }
-  catch { return send(res, 400, 'Bad request', 'text/plain'); }   // раніше некоректний %-код валив весь сервер
+  catch { return send(res, 400, 'Bad request', 'text/plain'); }
   const file = path.join(ROOT, path.normalize(rel));
   const type = TYPES[path.extname(file).toLowerCase()];
   if (!file.startsWith(ROOT + path.sep) || !type) return send(res, 404, 'Not found', 'text/plain');
 
   const cache = type.startsWith('text/html') ? 'no-cache' : 'public, max-age=86400';
   fs.readFile(file, (err, buf) => err ? send(res, 404, 'Not found', 'text/plain') : send(res, 200, buf, type, { 'Cache-Control': cache }));
-}).listen(PORT, () => console.log(`AutoHub: http://localhost:${PORT}  (авто: ${cars.length}, бот: ${BOT_TOKEN ? 'увімкнено' : 'вимкнено'})`));
+});
 
 // ===== Telegram-бот =====
 const tg = (method, body) => fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
@@ -125,19 +188,22 @@ function ask(chat, s) {
   return say(chat, st.q, st.opts ? kb(st.opts) : noKb);
 }
 
-async function savePhoto(fileId, name) {
+async function savePhoto(fileId, id, n) {
   const f = await tg('getFile', { file_id: fileId });
   if (!f.ok) throw new Error('getFile: ' + JSON.stringify(f));
   const r = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${f.result.file_path}`);
   if (!r.ok) throw new Error('download ' + r.status);
+  const buf = Buffer.from(await r.arrayBuffer());
+  if (CLD) return cldUpload(buf, `${CLD_DIR}/${id}-${n}`);   // повертає https-посилання на фото
   fs.mkdirSync(IMG, { recursive: true });
-  fs.writeFileSync(path.join(IMG, name), Buffer.from(await r.arrayBuffer()));
-  return 'img/' + name;
+  fs.writeFileSync(path.join(IMG, `${id}-${n}.jpg`), buf);
+  return `img/${id}-${n}.jpg`;
 }
 
-function finish(chat, s) {
+async function finish(chat, s) {
   const c = { ...s.car, sub: '', photos: s.photos };
-  cars.unshift(c); save(); sess.delete(chat);
+  cars.unshift(c); sess.delete(chat);
+  await save();
   return say(chat, `✅ Додано: ${c.brand} ${c.model}, ${c.year}. Уже на сайті.\n\n/add — ще одне авто, /list — каталог`, noKb);
 }
 
@@ -159,14 +225,14 @@ async function onMessage(m) {
     const c = cars.find(x => x.id === mm[2]);
     if (!c) return say(chat, 'Авто не знайдено.');
     if (mm[1] === 'del') return say(chat, `Видалити ${c.brand} ${c.model}? Підтвердіть: /delyes_${c.id}`);
-    if (mm[1] === 'delyes') { cars = cars.filter(x => x !== c); rmPhotos(c); save(); return say(chat, 'Видалено.'); }
-    c.status = mm[1]; save();
+    if (mm[1] === 'delyes') { cars = cars.filter(x => x !== c); rmPhotos(c); await save(); return say(chat, 'Видалено.'); }
+    c.status = mm[1]; await save();
     return say(chat, `${c.brand} ${c.model}: ${mm[1] === 'sold' ? 'продано' : 'в наявності'}.`);
   }
   if ((mm = text.match(/^\/price\s+(\w+)\s+(\S+)/))) {
     const c = cars.find(x => x.id === mm[1]), p = parseNum(mm[2]);
     if (!c || !p) return say(chat, 'Формат: /price ID 85000');
-    c.price = p; save();
+    c.price = p; await save();
     return say(chat, `${c.brand} ${c.model}: ${p} ${CUR}.`);
   }
 
@@ -177,7 +243,7 @@ async function onMessage(m) {
   if (st.k === 'photos') {
     if (m.photo) {
       const p = m.photo[m.photo.length - 1];   // найбільший розмір
-      s.photos.push(await savePhoto(p.file_id, `${s.car.id}-${s.photos.length + 1}.jpg`));
+      s.photos.push(await savePhoto(p.file_id, s.car.id, s.photos.length + 1));
       if (!m.media_group_id || m.media_group_id !== s.grp) await say(chat, 'Фото додано. Надішліть ще або натисніть «Готово».');
       s.grp = m.media_group_id;
       return;
@@ -214,4 +280,15 @@ async function poll() {
     }
   }
 }
-if (BOT_TOKEN) poll(); else console.warn('BOT_TOKEN не задано — бот вимкнено');
+
+// ===== Старт: спочатку завантажуємо каталог, потім приймаємо запити =====
+(async () => {
+  try { await loadCars(); }
+  catch (e) {
+    // не стартуємо з порожнім списком, щоб випадково не перезаписати каталог у хмарі
+    console.error(e.message);
+    process.exit(1);
+  }
+  server.listen(PORT, () => console.log(`AutoHub: http://localhost:${PORT}  (авто: ${cars.length}, бот: ${BOT_TOKEN ? 'увімкнено' : 'вимкнено'}, сховище: ${CLD ? 'Cloudinary' : 'локальне'})`));
+  if (BOT_TOKEN) poll(); else console.warn('BOT_TOKEN не задано — бот вимкнено');
+})();
